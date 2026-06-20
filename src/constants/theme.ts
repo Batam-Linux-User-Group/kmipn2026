@@ -14,6 +14,17 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
+    // Jeda Mint Theme
+    mintLight: '#D0F6EB',
+    mintGradientStart: '#D3F7ED',
+    mintGradientEnd: '#FFFFFF',
+    mintDark: '#056B4E',
+    mintMedium: '#2BD5A2',
+    mintBorder: '#A9EAD7',
+    mintStreakBackground: '#C2F1E4',
+    streakOrange: '#EF6B5F',
+    cardSubtitle: '#7C8C85',
+    tabBarBackground: '#E1FAF2',
   },
   dark: {
     text: '#ffffff',
@@ -21,6 +32,17 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    // Jeda Mint Theme
+    mintLight: '#1A3D33',
+    mintGradientStart: '#122D25',
+    mintGradientEnd: '#000000',
+    mintDark: '#2BD5A2',
+    mintMedium: '#056B4E',
+    mintBorder: '#1A4D3E',
+    mintStreakBackground: '#163E33',
+    streakOrange: '#FF7B6E',
+    cardSubtitle: '#9CAB9F',
+    tabBarBackground: '#102B23',
   },
 } as const;
 
