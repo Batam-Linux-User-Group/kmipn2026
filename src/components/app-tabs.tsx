@@ -1,8 +1,4 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-<<<<<<< HEAD
-=======
-import React from 'react';
->>>>>>> 7ae4e9cae30c359290c487dec1e3fafd157bad93
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
