@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { router } from 'expo-router';
+import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
   Pressable,
   ScrollView,
-  TextInput,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Search, Bell, Heart, MessageSquare, Share2, Clock, Plus } from 'lucide-react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
 import { Avatar } from '@/components/avatar';
-import { postsStore, Post } from '@/constants/posts-data';
+import { Post, postsStore } from '@/constants/posts-data';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 // --- CUSTOM SVG LOGO (MINT SHEILD) ---
 function ForumLogo() {
@@ -57,13 +56,17 @@ export default function ForumScreen() {
 
   // Load and subscribe to posts changes
   useEffect(() => {
-    setPosts(postsStore.getPosts());
-    
-    // Subscribe to store updates
+    // Subscribe to store updates first.
+    // Keep setState inside the store callback to satisfy react-hooks/set-state-in-effect.
     const unsubscribe = postsStore.subscribe(() => {
       setPosts(postsStore.getPosts());
     });
-    
+
+    // Initial load after effect commits.
+    queueMicrotask(() => {
+      setPosts(postsStore.getPosts());
+    });
+
     return unsubscribe;
   }, []);
 

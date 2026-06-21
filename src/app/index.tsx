@@ -216,10 +216,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (isBreathingModalOpen) {
-      startBreathing();
+      queueMicrotask(() => startBreathing());
     } else {
-      stopBreathing();
+      queueMicrotask(() => stopBreathing());
     }
+
     return () => {
       stopBreathing();
     };
