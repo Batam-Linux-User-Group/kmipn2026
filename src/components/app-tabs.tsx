@@ -1,11 +1,9 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
-import { Home, MessageSquare, BarChart2, User } from 'lucide-react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Tabs } from "expo-router";
+import { BarChart2, Home, MessageSquare, User } from "lucide-react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from "@/hooks/use-theme";
 
 // SVG Background with a Bezier Curve cutout that moves based on the dipCenter
 interface TabBgProps {
@@ -43,9 +41,9 @@ function TabBg({ width, dipCenter, color }: TabBgProps) {
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const theme = useTheme();
-  const { width } = Dimensions.get('window');
+  const { width } = Dimensions.get("window");
 
-  const allowedRoutes = ['index', 'forum', 'progress', 'profile'];
+  const allowedRoutes = ["index", "forum", "progress", "profile"];
 
   // Filter out any auto-discovered routes to find the 4 main visible ones
   const visibleRoutes = state.routes.filter((route: any) => {
@@ -59,35 +57,50 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
   // Determine active visible index
   const activeRouteName = state.routes[state.index].name;
-  
-  // If the active route is a sub-route (forum-detail or forum-create), 
+
+  // If the active route is a sub-route (forum-detail or forum-create),
   // map it to the parent tab 'forum' so it remains active.
   let activeTabName = activeRouteName;
-  if (activeRouteName === 'forum-detail' || activeRouteName === 'forum-create') {
-    activeTabName = 'forum';
+  if (
+    activeRouteName === "forum-detail" ||
+    activeRouteName === "forum-create"
+  ) {
+    activeTabName = "forum";
   }
 
-  const activeVisibleIndex = visibleRoutes.findIndex((r: any) => r.name === activeTabName);
-  
+  const activeVisibleIndex = visibleRoutes.findIndex(
+    (r: any) => r.name === activeTabName,
+  );
+
   // Calculate dynamic dip center coordinate, adding 8 to offset the left paddingHorizontal: 8
-  const dipCenter = activeVisibleIndex !== -1 ? (tabWidth * (activeVisibleIndex + 0.5)) + 6 : (tabWidth * 0.5);
+  const dipCenter =
+    activeVisibleIndex !== -1
+      ? tabWidth * (activeVisibleIndex + 0.5) + 6
+      : tabWidth * 0.5;
 
   return (
     <View style={styles.tabBarContainer}>
       {/* Dynamic Curved Tab Background */}
-      <TabBg width={width} dipCenter={dipCenter} color={theme.tabBarBackground} />
+      <TabBg
+        width={width}
+        dipCenter={dipCenter}
+        color={theme.tabBarBackground}
+      />
 
       <View style={styles.tabButtonsWrapper}>
         {state.routes.map((route: any, index: number) => {
           // Explicitly do not render any tabs that are not in the main allowed tab list
           if (!allowedRoutes.includes(route.name)) return null;
 
-          const isFocused = state.routes[state.index].name === route.name || 
-            (route.name === 'forum' && (activeRouteName === 'forum-detail' || activeRouteName === 'forum-create'));
+          const isFocused =
+            state.routes[state.index].name === route.name ||
+            (route.name === "forum" &&
+              (activeRouteName === "forum-detail" ||
+                activeRouteName === "forum-create"));
 
           const onPress = () => {
             const event = navigation.emit({
-              type: 'tabPress',
+              type: "tabPress",
               target: route.key,
               canPreventDefault: true,
             });
@@ -99,20 +112,20 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
           // Icon and Label selection
           let IconComponent = Home;
-          let labelText = 'Home';
-          
-          if (route.name === 'index') {
+          let labelText = "Home";
+
+          if (route.name === "index") {
             IconComponent = Home;
-            labelText = 'Home';
-          } else if (route.name === 'forum') {
+            labelText = "Home";
+          } else if (route.name === "forum") {
             IconComponent = MessageSquare;
-            labelText = 'Forum';
-          } else if (route.name === 'progress') {
+            labelText = "Forum";
+          } else if (route.name === "progress") {
             IconComponent = BarChart2;
-            labelText = 'Progress';
-          } else if (route.name === 'profile') {
+            labelText = "Progress";
+          } else if (route.name === "profile") {
             IconComponent = User;
-            labelText = 'Profile';
+            labelText = "Profile";
           }
 
           return (
@@ -126,9 +139,9 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                       styles.homeRaisedButton,
                       {
                         borderColor: theme.mintBorder,
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: "#FFFFFF",
                       },
-                      pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] }
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] },
                     ]}
                   >
                     <IconComponent
@@ -137,7 +150,13 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                       strokeWidth={2.5}
                     />
                   </Pressable>
-                  <Text style={[styles.tabLabel, { color: theme.mintDark }, styles.absoluteLabel]}>
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      { color: theme.mintDark },
+                      styles.absoluteLabel,
+                    ]}
+                  >
                     {labelText}
                   </Text>
                 </View>
@@ -147,17 +166,19 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   onPress={onPress}
                   style={({ pressed }) => [
                     styles.tabButton,
-                    pressed && { opacity: 0.8 }
+                    pressed && { opacity: 0.8 },
                   ]}
                 >
                   <View style={styles.unfocusedIconWrapper}>
-                    <IconComponent
-                      size={22}
-                      color="#7C8C85"
-                      strokeWidth={2}
-                    />
+                    <IconComponent size={22} color="#7C8C85" strokeWidth={2} />
                   </View>
-                  <Text style={[styles.tabLabel, { color: '#7C8C85' }, styles.absoluteLabel]}>
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      { color: "#7C8C85" },
+                      styles.absoluteLabel,
+                    ]}
+                  >
                     {labelText}
                   </Text>
                 </Pressable>
@@ -176,32 +197,32 @@ export default function AppTabs() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: "Home",
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="forum"
         options={{
-          title: 'Forum',
+          title: "Forum",
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
-          title: 'Progress',
+          title: "Progress",
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: "Profile",
           headerShown: false,
         }}
       />
-      
+
       {/* Sub-routes under Forum (hidden from bottom navigation) */}
       <Tabs.Screen
         name="forum-detail"
@@ -232,71 +253,71 @@ export default function AppTabs() {
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    width: '100%',
+    width: "100%",
     height: 85,
-    backgroundColor: 'transparent',
-    shadowColor: '#056B4E',
+    backgroundColor: "transparent",
+    shadowColor: "#056B4E",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 8,
   },
   tabButtonsWrapper: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: 85,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 8,
   },
   tabItemContainer: {
     flex: 1,
     height: 85,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   tabButton: {
-    width: '100%',
+    width: "100%",
     height: 85,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   unfocusedIconWrapper: {
-    position: 'absolute',
+    position: "absolute",
     top: 20, // aligns perfectly with raised button's vertical visual center
     height: 32,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   raisedTabContent: {
-    width: '100%',
+    width: "100%",
     height: 85,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   homeRaisedButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 8, // lowered down from -12 to fit nicely inside the curve without floating too high or clashing
     width: 50,
     height: 50,
     borderRadius: 25,
     borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#056B4E',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#056B4E",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 4,
   },
   absoluteLabel: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 8,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
