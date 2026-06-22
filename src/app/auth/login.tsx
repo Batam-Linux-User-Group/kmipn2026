@@ -1,13 +1,13 @@
 import {
-    Pressable,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View
+  Image,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-
 
 // Google "G" logo SVG
 function GoogleIcon() {
@@ -33,15 +33,31 @@ function GoogleIcon() {
   );
 }
 
+function JEDALogo() {
+  return (
+    <View style={styles.logoContainer}>
+       <Image 
+        source={require('@/assets/icons/Jeda_Logo.png')} 
+        style={styles.logoImage}
+        resizeMode="contain"
+      /> 
+    </View>
+  );
+}
+
 interface LoginScreenProps {
   onGoogleSignIn?: () => void;
 }
 
 export default function LoginScreen({ onGoogleSignIn }: LoginScreenProps) {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#A8DDD0" />
 
+      {/* Logo Section */}
+      <View style={styles.logoSection}>
+        <JEDALogo />
+      </View>
 
       {/* Text Section */}
       <View style={styles.textSection}>
@@ -64,7 +80,6 @@ export default function LoginScreen({ onGoogleSignIn }: LoginScreenProps) {
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </Pressable>
       </View>
-
     </SafeAreaView>
   );
 }
@@ -75,6 +90,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#A8DDD0",
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoSection: {
+    marginBottom: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoContainer: {
+    width: 200,
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoImage: {
+    width: 200,
+    height: 200,
   },
   textSection: {
     alignItems: "center",
