@@ -2,11 +2,11 @@ import { router } from 'expo-router';
 import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -51,22 +51,16 @@ function CheckmarkIcon() {
 
 export default function ForumScreen() {
   const theme = useTheme();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>(() => postsStore.getPosts());
   const [selectedCategory, setSelectedCategory] = useState<'Semua Kategori' | 'Minta Saran' | 'Berbagi Cerita'>('Semua Kategori');
 
   // Load and subscribe to posts changes
   useEffect(() => {
-    // Subscribe to store updates first.
-    // Keep setState inside the store callback to satisfy react-hooks/set-state-in-effect.
+    // Subscribe to store updates
     const unsubscribe = postsStore.subscribe(() => {
       setPosts(postsStore.getPosts());
     });
-
-    // Initial load after effect commits.
-    queueMicrotask(() => {
-      setPosts(postsStore.getPosts());
-    });
-
+    
     return unsubscribe;
   }, []);
 
@@ -76,7 +70,7 @@ export default function ForumScreen() {
 
   const handlePostDetail = (postId: string) => {
     router.push({
-      pathname: '/forum-detail',
+      pathname: '/tabs/forum-detail',
       params: { id: postId }
     });
   };
@@ -120,7 +114,7 @@ export default function ForumScreen() {
               </View>
             </View>
             <Pressable
-              onPress={() => router.push('/forum-create')}
+              onPress={() => router.push('/tabs/forum-create')}
               style={({ pressed }) => [
                 styles.plusButton,
                 { backgroundColor: theme.mintMedium },

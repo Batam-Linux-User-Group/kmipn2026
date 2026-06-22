@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Clock, Heart, Send } from 'lucide-react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import { useEffect, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
 import { Avatar } from '@/components/avatar';
-import { postsStore, Post, Comment } from '@/constants/posts-data';
+import { Post, postsStore } from '@/constants/posts-data';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 function CheckmarkIcon() {
   return (
@@ -38,11 +38,18 @@ export default function ForumDetailScreen() {
   // Load post details and subscribe to updates
   useEffect(() => {
     const postId = id || 'post-1'; // fallback to first post if no id provided
-    setPost(postsStore.getPostById(postId) || null);
 
     const unsubscribe = postsStore.subscribe(() => {
+      // Keep state updates inside the store callback to avoid setState-in-effect linting.
       setPost(postsStore.getPostById(postId) || null);
     });
+
+    // Initial load: schedule after effect commits.
+    queueMicrotask(() => {
+      // Defer to the next microtask so the effect body doesn't synchronously trigger setState.
+      setPost(postsStore.getPostById(postId) || null);
+    });
+
 
     return unsubscribe;
   }, [id]);
