@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { router } from 'expo-router';
+import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  TextInput,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Search, Bell, Heart, MessageSquare, Share2, Clock, Plus } from 'lucide-react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
 import { Avatar } from '@/components/avatar';
-import { postsStore, Post } from '@/constants/posts-data';
+import { Post, postsStore } from '@/constants/posts-data';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 // --- CUSTOM SVG LOGO (MINT SHEILD) ---
 function ForumLogo() {
@@ -52,13 +51,11 @@ function CheckmarkIcon() {
 
 export default function ForumScreen() {
   const theme = useTheme();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>(() => postsStore.getPosts());
   const [selectedCategory, setSelectedCategory] = useState<'Semua Kategori' | 'Minta Saran' | 'Berbagi Cerita'>('Semua Kategori');
 
   // Load and subscribe to posts changes
   useEffect(() => {
-    setPosts(postsStore.getPosts());
-    
     // Subscribe to store updates
     const unsubscribe = postsStore.subscribe(() => {
       setPosts(postsStore.getPosts());
@@ -73,7 +70,7 @@ export default function ForumScreen() {
 
   const handlePostDetail = (postId: string) => {
     router.push({
-      pathname: '/forum-detail',
+      pathname: '/tabs/forum-detail',
       params: { id: postId }
     });
   };
@@ -117,7 +114,7 @@ export default function ForumScreen() {
               </View>
             </View>
             <Pressable
-              onPress={() => router.push('/forum-create')}
+              onPress={() => router.push('/tabs/forum-create')}
               style={({ pressed }) => [
                 styles.plusButton,
                 { backgroundColor: theme.mintMedium },
