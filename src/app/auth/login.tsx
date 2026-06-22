@@ -1,4 +1,7 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   StatusBar,
@@ -36,7 +39,7 @@ function GoogleIcon() {
 function JEDALogo() {
   return (
     <View style={styles.logoContainer}>
-       <Image 
+      <Image 
         source={require('@/assets/icons/Jeda_Logo.png')} 
         style={styles.logoImage}
         resizeMode="contain"
@@ -45,11 +48,34 @@ function JEDALogo() {
   );
 }
 
-interface LoginScreenProps {
-  onGoogleSignIn?: () => void;
-}
+export default function LoginScreen() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-export default function LoginScreen({ onGoogleSignIn }: LoginScreenProps) {
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    
+    try {
+      // TODO: Tambahkan logika autentikasi Google di sini
+      // Contoh:
+      // await GoogleSignin.hasPlayServices();
+      // const userInfo = await GoogleSignin.signIn();
+      
+      // Simulasi delay proses login (hapus ini setelah implementasi Google Auth)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log("Login berhasil!");
+      
+      // Navigasi ke halaman utama (tabs)
+      // Menggunakan 'replace' agar user tidak bisa back ke halaman login
+      router.replace("/tabs");
+      
+    } catch (error) {
+      console.error("Error saat login:", error);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#A8DDD0" />
@@ -70,14 +96,22 @@ export default function LoginScreen({ onGoogleSignIn }: LoginScreenProps) {
       {/* Button Section */}
       <View style={styles.buttonSection}>
         <Pressable
-          onPress={onGoogleSignIn}
+          onPress={handleGoogleSignIn}
+          disabled={isLoading}
           style={({ pressed }) => [
             styles.googleButton,
-            pressed && styles.googleButtonPressed,
+            pressed && !isLoading && styles.googleButtonPressed,
+            isLoading && styles.googleButtonDisabled,
           ]}
         >
-          <GoogleIcon />
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#1A1A1A" size="small" />
+          ) : (
+            <>
+              <GoogleIcon />
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </SafeAreaView>
@@ -149,6 +183,9 @@ const styles = StyleSheet.create({
   googleButtonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
+  },
+  googleButtonDisabled: {
+    opacity: 0.6,
   },
   googleButtonText: {
     fontSize: 15,
