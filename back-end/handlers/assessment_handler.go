@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,10 +22,13 @@ import (
 
 // CreateAssessmentRequest is the request body for POST /api/assessments.
 type CreateAssessmentRequest struct {
-	Answers     json.RawMessage `json:"answers"      binding:"required"`
-	JournalText string          `json:"journal_text"`
-	TotalScore  int             `json:"total_score"   binding:"required"`
-	RiskStatus  string          `json:"risk_status"   binding:"required"`
+	Answers        json.RawMessage `json:"answers"         binding:"required"`
+	JournalText    string          `json:"journal_text"`
+	TotalScore     int             `json:"total_score"     binding:"required"`
+	RiskStatus     string          `json:"risk_status"     binding:"required"`
+	Recommendation string          `json:"recommendation"`
+	MainInstrument string          `json:"main_instrument"`
+	TriggerCount   int             `json:"trigger_count"`
 }
 
 // TodayResponse is the response body for GET /api/assessments/today.
@@ -165,12 +169,15 @@ func CreateAssessment(c *gin.Context) {
 		// Step 1: Upsert daily_assessments
 		// ------------------------------------------------------------------
 		assessment := models.DailyAssessment{
-			UserID:      userID,
-			Date:        today,
-			Answers:     req.Answers,
-			TotalScore:  req.TotalScore,
-			RiskStatus:  req.RiskStatus,
-			JournalText: req.JournalText,
+			UserID:         userID,
+			Date:           today,
+			Answers:        req.Answers,
+			TotalScore:     req.TotalScore,
+			RiskStatus:     req.RiskStatus,
+			Recommendation: req.Recommendation,
+			MainInstrument: req.MainInstrument,
+			TriggerCount:   req.TriggerCount,
+			JournalText:    req.JournalText,
 		}
 
 		result := tx.Clauses(clause.OnConflict{
@@ -182,6 +189,9 @@ func CreateAssessment(c *gin.Context) {
 				"answers",
 				"total_score",
 				"risk_status",
+				"recommendation",
+				"main_instrument",
+				"trigger_count",
 				"journal_text",
 				"updated_at",
 			}),
@@ -289,5 +299,89 @@ func CreateAssessment(c *gin.Context) {
 		"message":    "Assessment saved successfully",
 		"assessment": savedAssessment,
 		"streak":     savedStreak,
+	})
+}
+
+// --------------------------------------------------------------------------
+// GET /api/assessments/history
+// --------------------------------------------------------------------------
+
+// HistoryEntry is a single day's data for the Progress screen.
+type HistoryEntry struct {
+	Date           string `json:"date"`
+	TotalScore     int    `json:"total_score"`
+	RiskStatus     string `json:"risk_status"`
+	Recommendation string `json:"recommendation"`
+	MainInstrument string `json:"main_instrument"`
+	TriggerCount   int    `json:"trigger_count"`
+	JournalText    string `json:"journal_text"`
+}
+
+// GetAssessmentHistory handles GET /api/assessments/history.
+// Returns the last N days of assessment data for the Progress screen.
+// Supports optional query parameter ?days=7 (default 7).
+func GetAssessmentHistory(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	// Default to 7 days of history
+	days := 7
+	if daysParam := c.Query("days"); daysParam != "" {
+		var parsedDays int
+		if _, err := fmt.Sscanf(daysParam, "%d", &parsedDays); err == nil && parsedDays > 0 && parsedDays <= 90 {
+			days = parsedDays
+		}
+	}
+
+	startDate := todayDate().AddDate(0, 0, -(days - 1))
+
+	var assessments []models.DailyAssessment
+	result := config.DB.
+		Where("user_id = ? AND date >= ?", userID, startDate).
+		Order("date ASC").
+		Find(&assessments)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "server_error",
+			"message": "Failed to fetch assessment history: " + result.Error.Error(),
+		})
+		return
+	}
+
+	// Map to response format
+	history := make([]HistoryEntry, len(assessments))
+	for i, a := range assessments {
+		history[i] = HistoryEntry{
+			Date:           a.Date.Format("2006-01-02"),
+			TotalScore:     a.TotalScore,
+			RiskStatus:     a.RiskStatus,
+			Recommendation: a.Recommendation,
+			MainInstrument: a.MainInstrument,
+			TriggerCount:   a.TriggerCount,
+			JournalText:    a.JournalText,
+		}
+	}
+
+	// Get current streak info
+	currentStreak := 0
+	longestStreak := 0
+	var streak models.UserStreak
+	if err := config.DB.Where("user_id = ?", userID).First(&streak).Error; err == nil {
+		currentStreak = streak.CurrentStreak
+		longestStreak = streak.LongestStreak
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"history":        history,
+		"current_streak": currentStreak,
+		"longest_streak": longestStreak,
+		"days_requested": days,
 	})
 }

@@ -32,16 +32,40 @@ func main() {
 		})
 	})
 
-	// 5. Protected API routes — all require Supabase JWT
+	// 5. Protected API routes -- all require Supabase JWT
 	api := router.Group("/api")
 	api.Use(middleware.AuthMiddleware())
 	{
-		// User routes
+		// ── User routes ──────────────────────────────────────────────
 		api.POST("/users/sync", handlers.SyncUser)
 
-		// Assessment routes
+		// ── Assessment routes ────────────────────────────────────────
 		api.GET("/assessments/today", handlers.GetTodayAssessment)
+		api.GET("/assessments/history", handlers.GetAssessmentHistory)
 		api.POST("/assessments", handlers.CreateAssessment)
+
+		// ── Forum: Categories ────────────────────────────────────────
+		api.GET("/forum/categories", handlers.GetCategories)
+
+		// ── Forum: Posts ─────────────────────────────────────────────
+		api.GET("/forum/posts", handlers.GetPosts)
+		api.GET("/forum/posts/:id", handlers.GetPostByID)
+		api.POST("/forum/posts", handlers.CreatePost)
+		api.POST("/forum/posts/:id/like", handlers.TogglePostLike)
+
+		// ── Forum: Comments ──────────────────────────────────────────
+		api.GET("/forum/posts/:id/comments", handlers.GetCommentsByPost)
+		api.POST("/forum/posts/:id/comments", handlers.CreateComment)
+		api.POST("/forum/comments/:id/like", handlers.ToggleCommentLike)
+
+		// ── Notifications ────────────────────────────────────────────
+		api.GET("/notifications", handlers.GetNotifications)
+		api.PATCH("/notifications/:id/read", handlers.MarkNotificationRead)
+		api.PATCH("/notifications/read-all", handlers.MarkAllNotificationsRead)
+
+		// ── Daily Quotes ─────────────────────────────────────────────
+		api.GET("/quotes/random", handlers.GetRandomQuote)
+		api.GET("/quotes", handlers.GetAllQuotes)
 	}
 
 	// 6. Start server

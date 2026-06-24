@@ -15,7 +15,11 @@ import (
 type SyncUserRequest struct {
 	Email       string `json:"email"        binding:"required,email"`
 	DisplayName string `json:"display_name" binding:"required"`
+	Username    string `json:"username"`
 	AvatarURL   string `json:"avatar_url"`
+	Role        string `json:"role"`
+	IsAnonymous *bool  `json:"is_anonymous"`
+	IsVerified  *bool  `json:"is_verified"`
 }
 
 // SyncUser handles POST /api/users/sync.
@@ -56,7 +60,19 @@ func SyncUser(c *gin.Context) {
 		ID:          userID,
 		Email:       req.Email,
 		DisplayName: req.DisplayName,
+		Username:    req.Username,
 		AvatarURL:   req.AvatarURL,
+		Role:        req.Role,
+	}
+
+	// Set boolean fields if provided
+	if req.IsAnonymous != nil {
+		user.IsAnonymous = *req.IsAnonymous
+	} else {
+		user.IsAnonymous = true // default to anonymous
+	}
+	if req.IsVerified != nil {
+		user.IsVerified = *req.IsVerified
 	}
 
 	// 5. Upsert: insert or update on conflict (by primary key ID)
@@ -65,7 +81,11 @@ func SyncUser(c *gin.Context) {
 		DoUpdates: clause.AssignmentColumns([]string{
 			"email",
 			"display_name",
+			"username",
 			"avatar_url",
+			"role",
+			"is_anonymous",
+			"is_verified",
 			"updated_at",
 		}),
 	}).Create(&user)

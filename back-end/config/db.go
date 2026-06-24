@@ -38,11 +38,23 @@ func ConnectDB() {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 
-	// Auto-migrate the schema
+	// Auto-migrate the schema (all 10 tables)
 	err = db.AutoMigrate(
+		// Core tables
 		&models.User{},
-		&models.DailyAssessment{},
 		&models.UserStreak{},
+		&models.DailyAssessment{},
+
+		// Forum tables
+		&models.ForumCategory{},
+		&models.ForumPost{},
+		&models.ForumComment{},
+		&models.PostLike{},
+		&models.CommentLike{},
+
+		// Notification & Quote tables
+		&models.Notification{},
+		&models.DailyQuote{},
 	)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to auto-migrate database schema: %v", err)
