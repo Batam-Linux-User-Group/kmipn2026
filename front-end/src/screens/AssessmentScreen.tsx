@@ -93,8 +93,6 @@ export default function AssessmentScreen() {
     selectOption,
     goToNode,
     goBack,
-    journalText,
-    setJournalText,
     setPendingNextNodeId,
     history,
   } = useAssessmentStore();
@@ -224,19 +222,6 @@ export default function AssessmentScreen() {
                 );
               })}
             </View>
-
-            {/* Self Journal Input */}
-            <View style={styles.journalContainer}>
-              <TextInput
-                style={styles.journalInput}
-                placeholder="Tulis Jurnal Diri Anda di sini..."
-                placeholderTextColor="#888888"
-                multiline
-                value={journalText}
-                onChangeText={setJournalText}
-                textAlignVertical="top"
-              />
-            </View>
           </ScrollView>
 
           {/* Bottom Navigation Pills */}
@@ -362,24 +347,6 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     color: '#FFFFFF',
-  },
-
-  // Journal
-  journalContainer: {
-    marginBottom: 20,
-  },
-  journalInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#3BCFA6',
-    borderRadius: 15,
-    padding: 12,
-    paddingHorizontal: 16,
-    color: '#1A886A',
-    fontSize: 14,
-    minHeight: 80,
-    maxHeight: 150,
-    textAlignVertical: 'top',
   },
 
   // Bottom Navigation

@@ -1,8 +1,8 @@
-// src/screens/ResultScreen.tsx
-// Final result screen showing risk status, recommendation, journal, and navigation.
+// src/screens/JournalScreen.tsx
+// Dedicated self-journaling screen.
 
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -45,44 +45,21 @@ function JedaLogo({ size = 56 }: { size?: number }) {
   );
 }
 
-export default function ResultScreen() {
+export default function JournalScreen() {
   const router = useRouter();
-  const {
-    totalScore,
-    answers,
-    reset,
-    getRiskStatus: getStoreRiskStatus,
-  } = useAssessmentStore();
-
-  const { status, recommendation } = useMemo(
-    () => getStoreRiskStatus(),
-    [totalScore]
-  );
-
-  // Determine status color intensity
-  const statusColor = useMemo(() => {
-    switch (status) {
-      case 'Rendah':
-        return '#1A886A';
-      case 'Rentan':
-        return '#E6A817';
-      case 'Adiksi Tinggi':
-        return '#1A886A';
-      default:
-        return '#1A886A';
-    }
-  }, [status]);
+  // We can reuse the journal text state from the store, or keep it local.
+  // Using store to persist it temporarily.
+  const { journalText, setJournalText } = useAssessmentStore();
+  const [localText, setLocalText] = useState(journalText);
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleFinish = () => {
-    // TODO: In the future, submit to API here:
-    // POST /api/assessments with { answers, total_score, risk_status, journal_text }
-    // For now, just reset and go home.
-    reset();
-    router.replace('/tabs');
+  const handleSave = () => {
+    setJournalText(localText);
+    // Here you would also save to the backend if implemented
+    router.back();
   };
 
   return (
@@ -103,37 +80,25 @@ export default function ResultScreen() {
             <View style={styles.headerContainer}>
               <JedaLogo size={56} />
               <Text style={styles.logoLabel}>JEDA</Text>
-              <Text style={styles.titleText}>Result</Text>
-              <Text style={styles.subtitleText}>Hasil Analisis Anda</Text>
+              <Text style={styles.titleText}>Self Journaling</Text>
+              <Text style={styles.subtitleText}>Catat Emosi dan Strategimu Hari Ini</Text>
             </View>
 
-            {/* Status Text */}
-            <View style={styles.statusContainer}>
-              <Text style={[styles.statusText, { color: statusColor }]}>
-                {status === 'Adiksi Tinggi' ? (
-                  <>
-                    Adiksi <Text style={styles.statusHighlight}>Tinggi</Text>
-                  </>
-                ) : status === 'Rentan' ? (
-                  <Text style={styles.statusHighlight}>{status}</Text>
-                ) : (
-                  status
-                )}
+            {/* Self Journal Input */}
+            <View style={styles.journalSection}>
+              <Text style={styles.journalSectionSubtitle}>
+                Menambah risiko saat emosi tidak stabil adalah awal dari kehancuran. Ambil waktu sejenak untuk merefleksikan apa yang terjadi.
               </Text>
-
-              <Text style={styles.statusDescription}>
-                {status === 'Adiksi Tinggi'
-                  ? 'Anda menunjukkan adiksi investasi digital yang signifikan. Sangat disarankan untuk melakukan intervensi dan mengambil JEDA.'
-                  : status === 'Rentan'
-                  ? 'Kamu menunjukkan beberapa tanda kerentanan dalam perilaku investasi. Waspadai dorongan impulsif.'
-                  : 'Kebiasaan investasimu terlihat sehat. Tetap pertahankan pendekatan yang disiplin.'}
-              </Text>
-            </View>
-
-            {/* Recommendation Box */}
-            <View style={styles.recommendationBox}>
-              <Text style={styles.recommendationLabel}>Rekomendasi...</Text>
-              <Text style={styles.recommendationText}>{recommendation}</Text>
+              <TextInput
+                style={styles.journalInput}
+                placeholder="Tulis Jurnal Diri Anda di sini..."
+                placeholderTextColor="#888888"
+                multiline
+                value={localText}
+                onChangeText={setLocalText}
+                textAlignVertical="top"
+                autoFocus
+              />
             </View>
           </ScrollView>
 
@@ -145,8 +110,8 @@ export default function ResultScreen() {
 
             <View style={styles.dotIndicator} />
 
-            <Pressable style={styles.pillButton} onPress={handleFinish}>
-              <Text style={styles.pillButtonText}>Selesai</Text>
+            <Pressable style={styles.pillButton} onPress={handleSave}>
+              <Text style={styles.pillButtonText}>Simpan</Text>
             </Pressable>
           </SafeAreaView>
         </KeyboardAvoidingView>
@@ -175,7 +140,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     alignItems: 'center',
     paddingTop: 12,
-    marginBottom: 20,
+    marginBottom: 30,
   },
   logoLabel: {
     fontSize: 14,
@@ -191,56 +156,40 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   subtitleText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#1A886A',
     textAlign: 'center',
-    marginTop: 4,
-    opacity: 0.7,
-  },
-
-  // Status
-  statusContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
-  statusText: {
-    fontSize: 32,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  statusHighlight: {
-    color: '#3BCFA6',
-    fontWeight: '700',
-  },
-  statusDescription: {
-    fontSize: 14,
-    color: '#1A886A',
-    textAlign: 'center',
-    lineHeight: 22,
+    marginTop: 6,
     opacity: 0.8,
   },
 
-  // Recommendation
-  recommendationBox: {
-    backgroundColor: '#3BCFA6',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+  // Journal Section
+  journalSection: {
+    flex: 1,
   },
-  recommendationLabel: {
+  journalSectionSubtitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1A886A',
     opacity: 0.8,
-    marginBottom: 8,
-  },
-  recommendationText: {
-    fontSize: 14,
-    color: '#FFFFFF',
+    marginBottom: 16,
     lineHeight: 22,
-    fontWeight: '500',
+    textAlign: 'center',
+  },
+  journalInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#3BCFA6',
+    borderRadius: 20,
+    padding: 16,
+    color: '#1A886A',
+    fontSize: 15,
+    minHeight: 250,
+    textAlignVertical: 'top',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
 
   // Bottom Navigation

@@ -40,60 +40,52 @@ function ProgressLogo() {
 // Data mapping for interactive progress history
 interface HistoryData {
   status: 'Buruk' | 'Normal' | 'Baik';
-  catatan: string;
-  dorongan: string;
-  analisis: string;
+  rekomendasi: string;
+  hasilJournal: string;
   gaugeAngle: number; // needle rotation angle in degrees
 }
 
 const HISTORY_MAP: Record<number, HistoryData> = {
   10: {
     status: 'Normal',
-    catatan: 'HARI INI BERJALAN TENANG TANPA GEJALA CEMAS.',
-    dorongan: '85%',
-    analisis: '55%',
+    rekomendasi: 'HARI INI BERJALAN TENANG TANPA GEJALA CEMAS.',
+    hasilJournal: 'Hari ini pasar tidak terlalu volatil, saya merasa tenang dan tidak ada dorongan untuk overtrading.',
     gaugeAngle: -15,
   },
   11: {
     status: 'Baik',
-    catatan: 'STRATEGI INVESTASI BERJALAN SESUAI RENCANA.',
-    dorongan: '90%',
-    analisis: '70%',
+    rekomendasi: 'STRATEGI INVESTASI BERJALAN SESUAI RENCANA.',
+    hasilJournal: 'Saya berhasil menahan diri dari godaan FOMO koin baru. Tetap pada rencana jangka panjang.',
     gaugeAngle: 35,
   },
   12: {
     status: 'Buruk',
-    catatan: 'KEMBALI BERPIKIR RASIONAL & HINDARI INSTANT GRATIFICATION.',
-    dorongan: '60%',
-    analisis: '30%',
+    rekomendasi: 'KEMBALI BERPIKIR RASIONAL & HINDARI INSTANT GRATIFICATION.',
+    hasilJournal: 'Sangat tergoda untuk balas dendam karena cutloss pagi tadi. Saya harus berhenti sejenak.',
     gaugeAngle: -55,
   },
   13: {
     status: 'Normal',
-    catatan: 'EMOSI CUKUP STABIL, TETAP JAGA KONSISTENSI.',
-    dorongan: '75%',
-    analisis: '50%',
+    rekomendasi: 'EMOSI CUKUP STABIL, TETAP JAGA KONSISTENSI.',
+    hasilJournal: 'Memutuskan untuk tidak entry hari ini karena setup belum jelas. Keputusan yang baik.',
     gaugeAngle: -15,
   },
   14: {
     status: 'Baik',
-    catatan: 'LATIHAN PERNAPASAN BERHASIL MEREDAKAN EMOSI.',
-    dorongan: '95%',
-    analisis: '65%',
+    rekomendasi: 'LATIHAN PERNAPASAN BERHASIL MEREDAKAN EMOSI.',
+    hasilJournal: 'Latihan pernapasan 2 menit sangat membantu meredakan detak jantung saya saat chart mulai merah.',
     gaugeAngle: 35,
   },
   15: {
     status: 'Buruk',
-    catatan: 'HOLD & DCA CRYPTO MAJOR!',
-    dorongan: '80%',
-    analisis: '40%',
+    rekomendasi: 'HOLD & DCA CRYPTO MAJOR!',
+    hasilJournal: 'Kepanikan melanda saat Bitcoin turun 5%. Saya hampir menjual semuanya secara impulsif. Butuh lebih banyak JEDA.',
     gaugeAngle: -45, // pointing slightly to left for bad/unstable
   },
   16: {
     status: 'Baik',
-    catatan: 'TINGKATKAN SHOLAT & MEDITASI DIRI.',
-    dorongan: '90%',
-    analisis: '80%',
+    rekomendasi: 'TINGKATKAN SHOLAT & MEDITASI DIRI.',
+    hasilJournal: 'Pikiran jernih hari ini. Melakukan analisis teknikal mendalam tanpa terburu-buru.',
     gaugeAngle: 40,
   },
 };
@@ -307,26 +299,18 @@ export default function ProgressScreen() {
           </View>
 
           <View style={styles.detailCard}>
-            <Text style={styles.detailLabel}>Catatan Strategi</Text>
+            <Text style={styles.detailLabel}>Rekomendasi</Text>
             <Text style={[styles.detailValue, { color: theme.mintDark, fontSize: 15 }]}>
-              {currentData.catatan}
+              {currentData.rekomendasi}
             </Text>
           </View>
 
-          {/* STATS BUBBLES */}
-          <View style={styles.bottomStatsRow}>
-            <View style={[styles.statBubble, { borderColor: theme.mintBorder }]}>
-              <Text style={styles.statLabel}>Dorongan</Text>
-              <Text style={[styles.statValue, { color: theme.mintDark }]}>
-                {currentData.dorongan}
-              </Text>
-            </View>
-            <View style={[styles.statBubble, { borderColor: theme.mintBorder }]}>
-              <Text style={styles.statLabel}>Analisis</Text>
-              <Text style={[styles.statValue, { color: theme.mintDark }]}>
-                {currentData.analisis}
-              </Text>
-            </View>
+          {/* HASIL SELF JOURNAL CARDS */}
+          <Text style={[styles.sectionTitleHeader, { color: theme.mintDark, marginTop: Spacing.two }]}>
+            Hasil Self Journal
+          </Text>
+          <View style={styles.journalCard}>
+            <Text style={styles.journalText}>"{currentData.hasilJournal}"</Text>
           </View>
 
         </ScrollView>
@@ -467,29 +451,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  bottomStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+  journalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#3BCFA6',
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  statBubble: {
-    flex: 1,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 4,
-    backgroundColor: '#FAFDFD',
-  },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#7C8C85',
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: 2,
+  journalText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#1A2520',
+    lineHeight: 22,
   },
 });

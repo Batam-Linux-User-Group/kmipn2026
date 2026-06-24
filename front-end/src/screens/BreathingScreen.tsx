@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
+  Dimensions,
   Platform,
   Pressable,
   StyleSheet,
@@ -21,11 +22,14 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  withDelay,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Rect, Stop, Path } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Duration in seconds
 const BREATHING_DURATION = 30;
@@ -73,26 +77,47 @@ export default function BreathingScreen() {
 
   // Reanimated shared value for circle scale
   const circleScale = useSharedValue(1.0);
+  const waveScale = useSharedValue(1.0);
+  const waveOpacity = useSharedValue(0.0);
 
   // Derived value to determine phase text (inhale when expanding, exhale when contracting)
   const animationProgress = useSharedValue(0); // 0 = start of cycle, goes 0→1 over 6s
 
   // Start the animation
   useEffect(() => {
-    // Scale animation: 1.0 → 1.8 (3s) → 1.0 (3s), repeat
+    // Smooth Scale animation for main circle: 1.0 → 1.8 (3s) → 1.0 (3s), repeat
     circleScale.value = withRepeat(
       withSequence(
         withTiming(1.8, {
           duration: INHALE_DURATION,
-          easing: Easing.inOut(Easing.ease),
+          easing: Easing.bezier(0.4, 0, 0.2, 1),
         }),
         withTiming(1.0, {
           duration: EXHALE_DURATION,
-          easing: Easing.inOut(Easing.ease),
+          easing: Easing.bezier(0.4, 0, 0.2, 1),
         })
       ),
       -1, // infinite repeat
       false // don't reverse
+    );
+
+    // Wave Background animation
+    waveScale.value = withRepeat(
+      withTiming(2.5, {
+        duration: CYCLE_DURATION,
+        easing: Easing.out(Easing.quad),
+      }),
+      -1,
+      false
+    );
+
+    waveOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.4, { duration: INHALE_DURATION }),
+        withTiming(0.0, { duration: EXHALE_DURATION })
+      ),
+      -1,
+      false
     );
 
     // Track phase text via interval since useDerivedValue can't set React state
@@ -110,6 +135,8 @@ export default function BreathingScreen() {
 
     return () => {
       cancelAnimation(circleScale);
+      cancelAnimation(waveScale);
+      cancelAnimation(waveOpacity);
       if (phaseRef.current) clearInterval(phaseRef.current);
     };
   }, []);
@@ -154,8 +181,8 @@ export default function BreathingScreen() {
         router.replace('/assessment');
       }
     } else {
-      // Fallback: go back to assessment
-      router.replace('/assessment');
+      // Fallback: If no pending node, we came from Dashboard. Go back there.
+      router.back();
     }
   }, [pendingNextNodeId, goToNode, setPendingNextNodeId, router]);
 
@@ -163,8 +190,36 @@ export default function BreathingScreen() {
     transform: [{ scale: circleScale.value }],
   }));
 
+  const animatedWaveStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: waveScale.value }],
+    opacity: waveOpacity.value,
+  }));
+
   return (
     <View style={styles.container}>
+      {/* Background Gradient Wave */}
+      <Animated.View style={[styles.waveContainer, animatedWaveStyle]}>
+        <Svg height={SCREEN_HEIGHT * 1.5} width={SCREEN_HEIGHT * 1.5} viewBox="0 0 100 100">
+          <Defs>
+            <RadialGradient
+              id="grad"
+              cx="50"
+              cy="50"
+              rx="50"
+              ry="50"
+              fx="50"
+              fy="50"
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.4" />
+              <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity="0.1" />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100" height="100" fill="url(#grad)" />
+        </Svg>
+      </Animated.View>
+
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* Header with logo */}
         <View style={styles.headerContainer}>
@@ -182,28 +237,30 @@ export default function BreathingScreen() {
             </Animated.View>
           </View>
 
-          {/* Instruction below circle */}
+          {/* Instruction below circle with increased margin to avoid overlap */}
           <Text style={styles.instructionText}>
             Bernapaslah Perlahan,{'\n'}Mengikuti Tempo Lingkaran
           </Text>
         </View>
 
-        {/* Bottom Navigation Pills (visual consistency, Selanjutnya disabled) */}
-        <SafeAreaView edges={['bottom']} style={styles.bottomNav}>
-          <Pressable style={[styles.pillButton, styles.pillButtonDisabled]}>
-            <Text style={[styles.pillButtonText, styles.pillButtonTextOnDark]}>
-              Kembali
-            </Text>
-          </Pressable>
+        {/* Bottom Navigation Pills (Only show if coming from assessment) */}
+        {pendingNextNodeId ? (
+          <SafeAreaView edges={['bottom']} style={styles.bottomNav}>
+            <Pressable style={[styles.pillButton, styles.pillButtonDisabled]}>
+              <Text style={[styles.pillButtonText, styles.pillButtonTextOnDark]}>
+                Kembali
+              </Text>
+            </Pressable>
 
-          <View style={styles.dotIndicator} />
+            <View style={styles.dotIndicator} />
 
-          <Pressable style={[styles.pillButton, styles.pillButtonDisabled]}>
-            <Text style={[styles.pillButtonText, styles.pillButtonTextOnDark]}>
-              Selanjutnya
-            </Text>
-          </Pressable>
-        </SafeAreaView>
+            <Pressable style={[styles.pillButton, styles.pillButtonDisabled]}>
+              <Text style={[styles.pillButtonText, styles.pillButtonTextOnDark]}>
+                Selanjutnya
+              </Text>
+            </Pressable>
+          </SafeAreaView>
+        ) : null}
       </SafeAreaView>
     </View>
   );
@@ -213,9 +270,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+    overflow: 'hidden',
+  },
+  waveContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -SCREEN_HEIGHT * 0.75, // Center the wave
+    marginLeft: -SCREEN_HEIGHT * 0.75,
+    width: SCREEN_HEIGHT * 1.5,
+    height: SCREEN_HEIGHT * 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 0,
   },
   safeArea: {
     flex: 1,
+    zIndex: 1,
   },
 
   // Header
@@ -265,6 +336,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.7,
     lineHeight: 22,
+    marginTop: 60, // Added larger margin top to ensure no overlap when the circle scales to 1.8x
   },
 
   // Bottom Navigation

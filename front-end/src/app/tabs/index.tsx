@@ -1,23 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Flame, Play, RotateCcw, X } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { Flame } from "lucide-react-native";
+import { useState } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View
 } from "react-native";
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withTiming
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 
@@ -115,125 +106,6 @@ export default function HomeScreen() {
   // 'ya' means mood is bad (Yes, emotions are not good today, take a break)
   // 'tidak' means mood is fine (No, emotions are not bad)
   const [mood, setMood] = useState<"tidak" | "ya">("ya");
-
-  // State for Breathing Modal
-  const [isBreathingModalOpen, setIsBreathingModalOpen] = useState(false);
-  const [breathingPhase, setBreathingPhase] = useState<
-    "Tarik Napas" | "Tahan Napas" | "Hembuskan Napas"
-  >("Tarik Napas");
-  const [secondsRemaining, setSecondsRemaining] = useState(120); // 2 minutes
-  const [isBreathingActive, setIsBreathingActive] = useState(false);
-
-  // Animation shared values for breathing ring
-  const circleScale = useSharedValue(1);
-  const circleOpacity = useSharedValue(0.4);
-
-  // Timer Ref
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Phase loop Ref
-  const phaseRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Start breathing exercise
-  const startBreathing = () => {
-    setIsBreathingActive(true);
-    setSecondsRemaining(120);
-    setBreathingPhase("Tarik Napas");
-
-    // Animation loop (4s inhale, 2s hold, 4s exhale, 2s hold = 12s cycle)
-    const runAnimation = () => {
-      circleScale.value = withSequence(
-        withTiming(1.8, { duration: 4000, easing: Easing.out(Easing.ease) }), // Tarik
-        withTiming(1.8, { duration: 2000 }), // Tahan
-        withTiming(1.0, { duration: 4000, easing: Easing.inOut(Easing.ease) }), // Hembuskan
-        withTiming(1.0, { duration: 2000 }), // Tahan
-      );
-      circleOpacity.value = withSequence(
-        withTiming(0.8, { duration: 4000 }),
-        withTiming(0.8, { duration: 2000 }),
-        withTiming(0.3, { duration: 4000 }),
-        withTiming(0.3, { duration: 2000 }),
-      );
-    };
-
-    runAnimation();
-
-    // Repeat animation every 12 seconds
-    const animInterval = setInterval(runAnimation, 12000);
-
-    // Manage Phase Text changes
-    let elapsed = 0;
-    const updatePhase = () => {
-      const cycleTime = elapsed % 12;
-      if (cycleTime === 0) {
-        setBreathingPhase("Tarik Napas");
-      } else if (cycleTime === 4) {
-        setBreathingPhase("Tahan Napas");
-      } else if (cycleTime === 6) {
-        setBreathingPhase("Hembuskan Napas");
-      } else if (cycleTime === 10) {
-        setBreathingPhase("Tahan Napas");
-      }
-      elapsed += 1;
-    };
-
-    updatePhase();
-    const phaseInterval = setInterval(updatePhase, 1000);
-
-    // Countdown Timer
-    const countdown = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdown);
-          clearInterval(animInterval);
-          clearInterval(phaseInterval);
-          setIsBreathingActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    timerRef.current = countdown;
-    // Store intervals to clear them later
-    phaseRef.current = phaseInterval;
-
-    // We clean up if modal is closed
-    return () => {
-      clearInterval(countdown);
-      clearInterval(animInterval);
-      clearInterval(phaseInterval);
-    };
-  };
-
-  const stopBreathing = () => {
-    setIsBreathingActive(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (phaseRef.current) clearInterval(phaseRef.current);
-    cancelAnimation(circleScale);
-    cancelAnimation(circleOpacity);
-    circleScale.value = 1;
-    circleOpacity.value = 0.4;
-    setSecondsRemaining(120);
-  };
-
-  useEffect(() => {
-    if (isBreathingModalOpen) {
-      queueMicrotask(() => startBreathing());
-    } else {
-      queueMicrotask(() => stopBreathing());
-    }
-
-    return () => {
-      stopBreathing();
-    };
-  }, [isBreathingModalOpen]);
-
-  const animatedRingStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: circleScale.value }],
-      opacity: circleOpacity.value,
-    };
-  });
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60)
@@ -403,7 +275,7 @@ export default function HomeScreen() {
 
           {/* BREATHING TRIGGER */}
           <Pressable
-            onPress={() => setIsBreathingModalOpen(true)}
+            onPress={() => router.push('/breathing')}
             style={({ pressed }) => [
               styles.breathingButton,
               { backgroundColor: theme.mintMedium },
@@ -438,6 +310,7 @@ export default function HomeScreen() {
           </Pressable>
 
           <Pressable
+            onPress={() => router.push('/journal')}
             style={({ pressed }) => [
               styles.actionCard,
               pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
@@ -460,109 +333,6 @@ export default function HomeScreen() {
           </Pressable>
         </ScrollView>
       </SafeAreaView>
-
-      {/* BREATHING EXERCISE INTERACTIVE MODAL */}
-      <Modal
-        visible={isBreathingModalOpen}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsBreathingModalOpen(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <LinearGradient
-            colors={["#034331", "#056B4E"]}
-            style={styles.modalGradient}
-          >
-            <SafeAreaView style={styles.modalContainer}>
-              {/* Close Button */}
-              <View style={styles.modalHeader}>
-                <Pressable
-                  onPress={() => setIsBreathingModalOpen(false)}
-                  style={styles.modalCloseButton}
-                >
-                  <X size={24} color="#FFFFFF" />
-                </Pressable>
-              </View>
-
-              {/* Interactive Breathing Area */}
-              <View style={styles.breathingExerciseContainer}>
-                <Text style={styles.modalTimerText}>
-                  {formatTime(secondsRemaining)}
-                </Text>
-
-                <Text style={styles.modalPhaseText}>{breathingPhase}</Text>
-
-                {/* Animated Breathing Circles */}
-                <View style={styles.animatedCircleContainer}>
-                  {/* Background breathing pulse */}
-                  <Animated.View
-                    style={[
-                      styles.breathingOuterRing,
-                      { borderColor: theme.mintMedium },
-                      animatedRingStyle,
-                    ]}
-                  />
-                  {/* Middle ring */}
-                  <Animated.View
-                    style={[
-                      styles.breathingMiddleRing,
-                      { backgroundColor: theme.mintMedium + "44" },
-                      animatedRingStyle,
-                    ]}
-                  />
-                  {/* Central solid circle */}
-                  <View
-                    style={[
-                      styles.breathingCenterCircle,
-                      { backgroundColor: theme.mintMedium },
-                    ]}
-                  >
-                    <Text style={styles.breathingCenterText}>Jeda</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.instructionDetail}>
-                  Ikuti pergerakan lingkaran untuk menyelaraskan pernapasan
-                  Anda.
-                </Text>
-              </View>
-
-              {/* Control Buttons */}
-              <View style={styles.modalControls}>
-                {isBreathingActive ? (
-                  <Pressable
-                    onPress={stopBreathing}
-                    style={styles.controlButton}
-                  >
-                    <RotateCcw
-                      size={20}
-                      color="#FFFFFF"
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={styles.controlButtonText}>Ulangi</Text>
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    onPress={startBreathing}
-                    style={[
-                      styles.controlButton,
-                      { backgroundColor: theme.mintMedium },
-                    ]}
-                  >
-                    <Play
-                      size={20}
-                      color="#FFFFFF"
-                      style={{ marginRight: 8 }}
-                      fill="#FFFFFF"
-                    />
-                    <Text style={styles.controlButtonText}>Mulai Lagi</Text>
-                  </Pressable>
-                )}
-              </View>
-            </SafeAreaView>
-          </LinearGradient>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -719,112 +489,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     marginTop: 2,
-  },
-
-  // MODAL STYLING
-  modalOverlay: {
-    flex: 1,
-  },
-  modalGradient: {
-    flex: 1,
-  },
-  modalContainer: {
-    flex: 1,
-    padding: Spacing.four,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: Spacing.two,
-  },
-  modalCloseButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  breathingExerciseContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalTimerText: {
-    color: "#FFFFFF",
-    fontSize: 44,
-    fontWeight: "700",
-    letterSpacing: 2,
-    marginBottom: Spacing.one,
-  },
-  modalPhaseText: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontWeight: "600",
-    opacity: 0.95,
-    marginBottom: Spacing.six,
-  },
-  animatedCircleContainer: {
-    width: 280,
-    height: 280,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.six,
-  },
-  breathingOuterRing: {
-    position: "absolute",
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    borderWidth: 3,
-  },
-  breathingMiddleRing: {
-    position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-  },
-  breathingCenterCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  breathingCenterText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-  instructionDetail: {
-    color: "rgba(255, 255, 255, 0.7)",
-    fontSize: 14,
-    textAlign: "center",
-    paddingHorizontal: Spacing.five,
-    lineHeight: 20,
-  },
-  modalControls: {
-    paddingBottom: Spacing.five,
-    alignItems: "center",
-  },
-  controlButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-  },
-  controlButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
   },
 });
