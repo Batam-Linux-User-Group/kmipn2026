@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { Flame, Play, RotateCcw, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -108,6 +109,7 @@ function BookIcon() {
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
 
   // Interactive State for Mood Selector
   // 'ya' means mood is bad (Yes, emotions are not good today, take a break)
@@ -413,6 +415,7 @@ export default function HomeScreen() {
 
           {/* ACTION CARDS */}
           <Pressable
+            onPress={() => router.push('/assessment')}
             style={({ pressed }) => [
               styles.actionCard,
               pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
