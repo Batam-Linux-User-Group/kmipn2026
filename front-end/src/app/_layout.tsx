@@ -3,13 +3,12 @@ import {
   Lexend_500Medium,
   Lexend_600SemiBold,
   Lexend_700Bold,
-} from "@expo-google-fonts/lexend";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+} from '@expo-google-fonts/lexend';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 
-void SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -21,9 +20,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      void SplashScreen.hideAsync();
     }
-  }, [fontError, fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -31,6 +29,8 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="splash/splash" options={{ animation: "fade" }} />
+
       <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
       <Stack.Screen name="auth/login" options={{ animation: "fade" }} />
       <Stack.Screen name="tabs" options={{ animation: "fade" }} />

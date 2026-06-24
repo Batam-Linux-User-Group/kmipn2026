@@ -359,7 +359,6 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
 
         <Dots count={SLIDES.length} active={activeIndex} onMint={isLast} />
 
-        {/* keep container size stable to avoid any visual "shift" when switching Next -> Start */}
         <View style={[styles.navBtnContainer, styles.navBtnContainerRightFixed]}>
           <View style={styles.navBtnRightInner}>
             {!isLast ? (
@@ -399,25 +398,26 @@ const styles = StyleSheet.create({
     bottom: 80,
   },
   titleBlack: {
-    fontSize: 28,
+    fontSize: 37,
     fontWeight: "800",
     color: "#1A1A1A",
     textAlign: "center",
     lineHeight: 36,
   },
   titleBlackOnMint: {
-    color: "#FFFFFF",
+    color: "#1A1A1A",
   },
   titleMint: {
-    fontSize: 28,
+    fontSize: 37,
     fontWeight: "800",
     color: "#3CC8A0",
     textAlign: "center",
     lineHeight: 36,
     marginBottom: 16,
+    fontFamily: "laxend_Medium",
   },
   titleMintOnMint: {
-    color: "#FFFFFF",
+    color: "#1A886A",
     opacity: 0.85,
   },
   description: {
@@ -427,9 +427,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
     marginTop: 12,
+    fontFamily: "laxend_Medium",
   },
   descriptionOnMint: {
-    color: "rgba(255,255,255,0.85)",
+    fontSize: 14,
+    color: "#000000",
+    fontWeight: "400",
+    fontFamily: "laxend_Medium",
   },
 
   bottomNav: {
@@ -446,11 +450,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   navBtnContainerRightFixed: {
-    // tetap sama ukurannya walau kanan berubah dari Next -> Start
     width: 48,
   },
   navBtnRightInner: {
-    // memastikan area tetap 48x48 biar gak reflow/geser
     width: 48,
     height: 48,
     alignItems: "center",
@@ -494,8 +496,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   startBtn: {
-    width: 80,
-    height: 60,
+    width: 79,
+    height: 50,
     borderRadius: 20,
     paddingHorizontal: 0,
     paddingVertical: 0,
