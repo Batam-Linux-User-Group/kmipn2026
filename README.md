@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=40&pause=1000&color=3BCFA6&center=true&vCenter=true&width=600&lines=JEDA;Mental+Health+for+Traders;KMIPN+2026+Project" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=40&pause=1000&color=3BCFA6&center=true&vCenter=true&width=600&lines=JEDA+App;Mental+Health+for+Traders;KMIPN+2026+Project" alt="Typing SVG" />
 
   <br />
 
@@ -9,9 +9,9 @@
     <br />
     <a href="#-fitur-utama">Fitur</a>
     ·
-    <a href="#%EF%B8%8F-arsitektur--tech-stack">Tech Stack</a>
+    <a href="#%EF%B8%8F-arsitektur-sistem">Arsitektur</a>
     ·
-    <a href="#-alur-aplikasi-dag">Cara Kerja</a>
+    <a href="#-alur-asesmen-dag">Cara Kerja</a>
     ·
     <a href="#-tutorial-instalasi--penggunaan">Instalasi</a>
   </p>
@@ -38,7 +38,7 @@ Proyek ini dikembangkan secara komprehensif untuk diikutsertakan dalam kompetisi
 
 <table align="center">
   <tr>
-    <td align="center"><strong>Asesmen Berbasis DAG</strong></td>
+    <td align="center"><strong>Asesmen Cerdas (DAG)</strong></td>
     <td align="center"><strong>Breathing Lockdown (30s)</strong></td>
     <td align="center"><strong>Self Journal & Streak</strong></td>
   </tr>
@@ -56,50 +56,42 @@ Proyek ini dikembangkan secara komprehensif untuk diikutsertakan dalam kompetisi
 
 <br />
 
-## 🛠️ Arsitektur & Tech Stack
+## ⚙️ Arsitektur Sistem
 
-JEDA mengimplementasikan arsitektur *Middleware* yang memisahkan *Client* dari *Database* menggunakan *Backend* REST API, memastikan keamanan tinggi dan manipulasi data terpusat.
+JEDA mengimplementasikan arsitektur *Middleware* menggunakan **Golang** yang bertindak sebagai jembatan aman antara **Mobile App** dan **Database Supabase**. 
 
-### Frontend (Mobile App)
-* **Framework:** React Native (Expo)
-* **State Management:** Zustand (Local persistence & Global state)
-* **Animation:** React Native Reanimated (Untuk siklus pernapasan dinamis)
-* **UI/UX:** Custom Light Mint Theme (`#C5E3DE`, `#1A886A`, `#3BCFA6`) dengan *White Rounded Pill Buttons*.
-
-### Backend (REST API)
-* **Language:** Golang
-* **Framework:** Gin
-* **ORM:** GORM (PostgreSQL Driver)
-* **Security:** Custom Middleware untuk verifikasi JWT dari Supabase. Atomic Transactions untuk kalkulasi *streak* & *score*.
-
-### Database & Auth
-* **Provider:** Supabase (PostgreSQL)
-* **Auth:** Google Sign-In terintegrasi dengan Supabase Auth.
-
-<br />
-
-## 🧭 Alur Aplikasi (DAG)
-
-Logika JEDA dirancang menggunakan *Directed Acyclic Graph* (DAG) dengan 8 skenario utama:
+Berikut adalah topologi arsitektur sistem JEDA:
 
 ```mermaid
-graph TD
-    A[Start: Pilih Instrumen] -->|Saham| B[Saham Flow]
-    A -->|Crypto/Forex| C[Crypto Flow]
+graph LR
+    subgraph Client
+        RN[📱 React Native<br/>Mobile App]
+    end
+
+    subgraph Backend
+        GO[⚙️ Golang Gin<br/>API RESTful Middleware]
+    end
+
+    subgraph Cloud Service
+        SA[🔐 Supabase Auth<br/>Google Sign-In]
+        DB[(🗄️ Supabase<br/>PostgreSQL)]
+        GCP[☁️ Google Cloud<br/>OAuth Provider]
+    end
+
+    %% Relasi Client ke Auth
+    RN -->|1. Login Request| SA
+    SA <-->|2. Validasi OAuth| GCP
     
-    B --> D{Portofolio Hari Ini?}
-    D -->|Cutloss| E[Tindakan: Panik/Move-on]
-    D -->|Nyangkut| F[Solusi: Avg Down/Hold]
-    D -->|Tidak Entry| G[Emosi Hari Ini?]
+    %% Relasi Client ke Backend
+    RN <-->|3. HTTP Request JWT| GO
     
-    C --> H{Jenis?}
-    H -->|Futures| I[Kondisi: Margin Call / Floating]
-    H -->|Spot| J[Flow mirip Saham]
-    
-    E -->|Trigger Panik Berat| K((Breathing Screen 30s))
-    I -->|Trigger Panik Berat| K
-    J -->|Trigger Panik| K
-    
-    K --> L[Result & Rekomendasi]
-    F --> L
-    G --> L
+    %% Relasi Backend ke DB & Auth
+    GO -.->|4. Verifikasi JWT| SA
+    GO <-->|5. CRUD via GORM| DB
+
+    %% Styling
+    style RN fill:#20232a,stroke:#61dafb,color:#fff
+    style GO fill:#00add8,stroke:#00add8,color:#fff
+    style SA fill:#3ecf8e,stroke:#3ecf8e,color:#fff
+    style DB fill:#3ecf8e,stroke:#3ecf8e,color:#fff
+    style GCP fill:#4285F4,stroke:#4285F4,color:#fff
