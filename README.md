@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=40&pause=1000&color=3BCFA6&center=true&vCenter=true&width=600&lines=JEDA+App;Mental+Health+for+Traders;KMIPN+2026+Project" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=40&pause=1000&color=3BCFA6&center=true&vCenter=true&width=600&lines=JEDA;Mental+Health+for+Traders;KMIPN+2026+Project" alt="Typing SVG" />
 
   <br />
 
