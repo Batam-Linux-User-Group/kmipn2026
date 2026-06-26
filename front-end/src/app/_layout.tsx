@@ -6,9 +6,11 @@ import {
 } from '@expo-google-fonts/lexend';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
-// SplashScreen.preventAutoHideAsync();
+// Cegah native splash hilang sebelum font siap
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -20,6 +22,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
@@ -29,20 +32,15 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="splash/splash" options={{ animation: "fade" }} />
+      {/* Sesuaikan dengan path file aktual di folder app/ */}
+      <Stack.Screen name="splash/splash" options={{ animation: 'none' }} />
 
-      <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
-      <Stack.Screen name="auth/login" options={{ animation: "fade" }} />
-      <Stack.Screen name="tabs" options={{ animation: "fade" }} />
-      <Stack.Screen
-        name="assessment"
-        options={{ animation: "slide_from_right" }}
-      />
-      <Stack.Screen name="breathing" options={{ animation: "fade" }} />
-      <Stack.Screen
-        name="result"
-        options={{ animation: "slide_from_right" }}
-      />
+      <Stack.Screen name="onboarding"    options={{ animation: 'fade' }} />
+      <Stack.Screen name="auth/login"    options={{ animation: 'fade' }} />
+      <Stack.Screen name="tabs"          options={{ animation: 'fade' }} />
+      <Stack.Screen name="assessment"    options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="breathing"     options={{ animation: 'fade' }} />
+      <Stack.Screen name="result"        options={{ animation: 'slide_from_right' }} />
     </Stack>
   );
 }
