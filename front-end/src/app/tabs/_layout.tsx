@@ -74,7 +74,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   >
                     <IconComponent
                       size={24}
-                      color="#1A7A5E"
+                      color="#424242"
                       strokeWidth={2}
                     />
                   </Pressable>
@@ -91,7 +91,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   ]}
                 >
                   <View style={styles.unfocusedIconWrapper}>
-                    <IconComponent size={22} color="#8AADA0" strokeWidth={1.8} />
+                    <IconComponent size={22} color="#424242" strokeWidth={1.8} />
                   </View>
                   <Text style={[styles.tabLabel, styles.inactiveLabelText, styles.absoluteLabel]}>
                     {labelText}
