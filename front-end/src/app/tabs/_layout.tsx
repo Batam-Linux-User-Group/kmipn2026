@@ -1,8 +1,51 @@
 import { Tabs } from "expo-router";
-import { BarChart2, Home, MessageSquare, User } from "lucide-react-native";
+import { BarChart2, Bold, Home, MessageSquare, User } from "lucide-react-native";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Path, Circle } from "react-native-svg";
+import MaskedView from '@react-native-masked-view/masked-view';
 
 import { useTheme } from "@/hooks/use-theme";
+
+const TAB_BAR_HEIGHT = 75;
+const CIRCLE_RADIUS = 30;
+const CIRCLE_DIAMETER = CIRCLE_RADIUS * 2;
+
+interface TabBgProps {
+  width: number;
+  cutoutCenter: number;
+}
+
+function TabBg({ width, cutoutCenter }: TabBgProps) {
+  const h = TAB_BAR_HEIGHT;
+  const r = CIRCLE_RADIUS + 6;
+
+  const d = `
+    M 0,20 Q 0,0 20,0
+    L ${cutoutCenter - r - 12},0
+    Q ${cutoutCenter - r},0 ${cutoutCenter - r},10
+    A ${r + 12},${r + 12} 0 0 0 ${cutoutCenter + r},10
+    Q ${cutoutCenter + r},0 ${cutoutCenter + r + 12},0
+    L ${width - 20},0 Q ${width},0 ${width},20
+    L ${width},${h} L 0,${h} Z
+  `;
+
+  return (
+    <MaskedView
+      style={StyleSheet.absoluteFill}
+      maskElement={
+        <Svg width={width} height={h}>
+          <Path
+  d={d}
+  fill="#DCF5EC"
+  fillOpacity={1.0} 
+/>
+        </Svg>
+      }
+    >
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(220, 245, 236, 0.85)' }]} />
+    </MaskedView>
+  );
+}
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const theme = useTheme();
@@ -14,16 +57,22 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
   );
 
   const containerWidth = width - 40;
-  const tabSpacing = 76;
-  const totalTabsWidth = visibleRoutes.length * tabSpacing;
-  const sidePadding = (containerWidth - totalTabsWidth) / 2;
+  const tabSpacing = containerWidth / visibleRoutes.length;
 
   const activeRouteName = state.routes[state.index].name;
   let activeTabName = activeRouteName;
-
   if (activeRouteName === "forum-detail" || activeRouteName === "forum-create") {
     activeTabName = "forum";
   }
+
+  const activeVisibleIndex = visibleRoutes.findIndex(
+    (r: any) => r.name === activeTabName
+  );
+
+  const cutoutCenter =
+    activeVisibleIndex !== -1
+      ? tabSpacing * activeVisibleIndex + tabSpacing / 2
+      : tabSpacing / 2;
 
   const icons: Record<string, { Icon: any; label: string }> = {
     index:    { Icon: Home,          label: "Home"     },
@@ -34,10 +83,10 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={styles.tabBarContainer}>
-      {/* Background solid mint pill */}
-      <View style={styles.tabBarBg} />
+      <TabBg width={containerWidth} cutoutCenter={cutoutCenter} />
 
-      <View style={[styles.tabButtonsWrapper, { paddingHorizontal: sidePadding }]}>
+      {/* Tab buttons */}
+      <View style={styles.tabButtonsWrapper}>
         {state.routes.map((route: any) => {
           if (!allowedRoutes.includes(route.name)) return null;
 
@@ -61,22 +110,20 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           const { Icon: IconComponent, label: labelText } = icons[route.name];
 
           return (
-            <View key={route.key} style={styles.tabItemContainer}>
+            <View
+              key={route.key}
+              style={[styles.tabItemContainer, { width: tabSpacing }]}
+            >
               {isFocused ? (
                 <View style={styles.raisedTabContent}>
-                  {/* Circle putih yang naik ke atas */}
                   <Pressable
                     onPress={onPress}
                     style={({ pressed }) => [
                       styles.activeButton,
-                      pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+                      pressed && { transform: [{ scale: 0.95 }] },
                     ]}
                   >
-                    <IconComponent
-                      size={24}
-                      color="#424242"
-                      strokeWidth={2}
-                    />
+                    <IconComponent size={28} color="#1A5C45" strokeWidth={2} />
                   </Pressable>
                   <Text style={[styles.tabLabel, styles.activeLabelText, styles.absoluteLabel]}>
                     {labelText}
@@ -87,7 +134,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   onPress={onPress}
                   style={({ pressed }) => [
                     styles.tabButton,
-                    pressed && { opacity: 0.7 },
+                    pressed && { opacity: 0.6 },
                   ]}
                 >
                   <View style={styles.unfocusedIconWrapper}>
@@ -125,90 +172,78 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     bottom: 36,
-    height: 72,
-    borderRadius: 1000,
+    height: TAB_BAR_HEIGHT,
+    borderRadius: 30,
     overflow: "visible",
-    // Shadow hijau mint tipis
-    shadowColor: "#C0E8DD",
+    shadowColor: "#2D9E75",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 10,
   },
-  tabBarBg: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 1000,
-    backgroundColor: "#DBFFF5",   // mint solid sesuai referensi
-    borderWidth: 1.5,
-    borderColor: "#FFFFFF",       // border putih tipis
-  },
   tabButtonsWrapper: {
     flexDirection: "row",
-    height: 72,
+    height: TAB_BAR_HEIGHT,
     alignItems: "center",
-    justifyContent: "center",
   },
   tabItemContainer: {
-    width: 76,
-    height: 72,
+    height: TAB_BAR_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  // Tab tidak aktif
   tabButton: {
     width: "100%",
-    height: 72,
+    height: TAB_BAR_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
   },
   unfocusedIconWrapper: {
     position: "absolute",
-    top: 12,
-    height: 28,
-    justifyContent: "center",
+    top: 18,
     alignItems: "center",
+    justifyContent: "center",
   },
 
-  // Tab aktif
   raisedTabContent: {
     width: "100%",
-    height: 72,
+    height: TAB_BAR_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   activeButton: {
     position: "absolute",
-    top: -24,             // naik ke atas bar
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: "#DBFFF5",   // circle putih
+    top: -(CIRCLE_RADIUS - 10),  
+    width: CIRCLE_DIAMETER,
+    height: CIRCLE_DIAMETER,
+    borderRadius: CIRCLE_RADIUS,
+    backgroundColor: "#C8EFE0",   
     alignItems: "center",
     justifyContent: "center",
-    // Shadow lembut di bawah circle
-    shadowColor: "#3BCFA6",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    shadowColor: "#757575",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 12,
   },
 
   // Label
   absoluteLabel: {
     position: "absolute",
-    bottom: 6,
+    bottom: 8,
   },
   tabLabel: {
     fontSize: 11,
   },
   activeLabelText: {
     color: "#424242",
-    fontWeight: "700",
+    fontWeight: "bold",
   },
   inactiveLabelText: {
     color: "#424242",
-    fontWeight: "500",
+    fontWeight: "normal",
   },
 });
