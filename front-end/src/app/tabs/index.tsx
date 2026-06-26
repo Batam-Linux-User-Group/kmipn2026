@@ -11,38 +11,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
+import { Image } from "react-native";
 
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-// --- CUSTOM SVG ICONS ---
-
-function AppLogo() {
-  const theme = useTheme();
-  return (
-    <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-      <Path
-        d="M18 3L6 8v9c0 5.5 3.5 10.7 8 13.5l4 2.5 4-2.5c4.5-2.8 8-8 8-13.5V8L18 3z"
-        stroke={theme.mintDark}
-        strokeWidth={2.5}
-        fill={theme.mintLight}
-      />
-      <Path
-        d="M18 23c2.5-2.5 4-5.5 4-8 0-1.5-1-2.5-2.5-2.5-1 0-1.8.8-2.5 1.5-.7-.7-1.5-1.5-2.5-1.5-1.5 0-2.5 1-2.5 2.5 0 2.5 1.5 5.5 4 8"
-        stroke={theme.mintDark}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18 14v9"
-        stroke={theme.mintDark}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
 
 function CalendarIcon() {
   return (
@@ -102,9 +75,6 @@ export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
 
-  // Interactive State for Mood Selector
-  // 'ya' means mood is bad (Yes, emotions are not good today, take a break)
-  // 'tidak' means mood is fine (No, emotions are not bad)
   const [mood, setMood] = useState<"tidak" | "ya">("ya");
 
   const formatTime = (secs: number) => {
@@ -127,7 +97,11 @@ export default function HomeScreen() {
         {/* HEADER SECTION */}
         <View style={styles.header}>
           <View style={styles.profileContainer}>
-            <AppLogo />
+<Image
+  source={require('@/assets/images/logo-shield.png')} // sesuaikan path logo kamu
+  style={{ width: 38, height: 38 }}
+  resizeMode="contain"
+/>
             <View style={styles.profileText}>
               <Text
                 style={[styles.greetingText, { color: theme.mintDark + "99" }]}
@@ -411,7 +385,7 @@ const styles = StyleSheet.create({
   },
   whiteCardContent: {
     padding: Spacing.four,
-    paddingBottom: Spacing.six + 90, // extra spacing for bottom tabs
+    paddingBottom: Spacing.six + 90, 
   },
   promptText: {
     fontSize: 18,

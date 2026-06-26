@@ -10,32 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell } from 'lucide-react-native';
 import Svg, { Path, Circle, G, Line, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Image } from "react-native";
+
 
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 
-// Custom Jeda shield logo SVG
-function ProgressLogo() {
-  const theme = useTheme();
-  return (
-    <Svg width={32} height={32} viewBox="0 0 36 36" fill="none">
-      <Path
-        d="M18 3L6 8v9c0 5.5 3.5 10.7 8 13.5l4 2.5 4-2.5c4.5-2.8 8-8 8-13.5V8L18 3z"
-        stroke={theme.mintDark}
-        strokeWidth={2.5}
-        fill={theme.mintLight}
-      />
-      <Path
-        d="M18 23c2.5-2.5 4-5.5 4-8 0-1.5-1-2.5-2.5-2.5-1 0-1.8.8-2.5 1.5-.7-.7-1.5-1.5-2.5-1.5-1.5 0-2.5 1-2.5 2.5 0 2.5 1.5 5.5 4 8"
-        stroke={theme.mintDark}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path d="M18 14v9" stroke={theme.mintDark} strokeWidth={2} strokeLinecap="round" />
-    </Svg>
-  );
-}
+
 
 // Data mapping for interactive progress history
 interface HistoryData {
@@ -156,7 +137,11 @@ export default function ProgressScreen() {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <ProgressLogo />
+              <Image
+  source={require('@/assets/images/logo-shield.png')} // sesuaikan path logo kamu
+  style={{ width: 38, height: 38 }}
+  resizeMode="contain"
+/>
             <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Progress</Text>
           </View>
           <Pressable style={styles.bellButton}>
