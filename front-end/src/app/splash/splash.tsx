@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Dimensions, Image, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -15,79 +16,68 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
-  
-  // Shared Values
-  const bgOpacity = useSharedValue(1);
-  const whiteBgOpacity = useSharedValue(0);
-  const stemsScale = useSharedValue(0);
 
-  // Animated Styles
-  const tealBgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
+  const bgOpacity      = useSharedValue(1);
+  const whiteBgOpacity = useSharedValue(0);
+  const logoScale      = useSharedValue(0);
+  const logoOpacity    = useSharedValue(0);
+  const logoTranslateY = useSharedValue(40);
+
+  const tealBgStyle  = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
   const whiteBgStyle = useAnimatedStyle(() => ({ opacity: whiteBgOpacity.value }));
-  const stemsStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: stemsScale.value }],
-    opacity: stemsScale.value, // Opacity mengikuti nilai scale agar fade-in bersamaan
+  const logoStyle    = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [
+      { scale: logoScale.value },
+      { translateY: logoTranslateY.value },
+    ],
   }));
 
   useEffect(() => {
-    // TIMELINE ANIMASI:
-    // 0ms - 500ms   : Tahan layar Teal (Initial state)
-    // 500ms - 1100ms: Crossfade lembut ke layar Putih
-    // 1100ms - 1600ms: Logo muncul dengan efek Spring (membal)
-    // 1600ms - 2400ms: Tahan logo di layar
-    // 2400ms - 3000ms: Crossfade kembali ke Teal & Logo menghilang mengecil
+    const navigate = () => router.replace('/onboarding');
 
-    const fadeConfig = { duration: 600, easing: Easing.inOut(Easing.ease) };
+    const fadeIn  = { duration: 600, easing: Easing.inOut(Easing.ease) };
+    const fadeOut = { duration: 500, easing: Easing.in(Easing.cubic) };
 
-    // Animasi Background Teal
     bgOpacity.value = withSequence(
-      withDelay(500, withTiming(0, fadeConfig)),
-      // Delay 1300ms dihitung SETELAH animasi fade out 600ms selesai
-      withDelay(1300, withTiming(1, fadeConfig)) 
+      withDelay(500, withTiming(0, fadeIn)),
+      withDelay(1200, withTiming(1, fadeIn))
     );
 
-    // Animasi Background Putih
     whiteBgOpacity.value = withSequence(
-      withDelay(500, withTiming(1, fadeConfig)),
-      withDelay(1300, withTiming(0, fadeConfig))
+      withDelay(500, withTiming(1, fadeIn)),
+      withDelay(1200, withTiming(0, fadeOut))
     );
 
-    // Animasi Logo
-    stemsScale.value = withSequence(
-      // Mulai muncul setelah layar putih siap (500ms delay + 600ms fade)
-      withDelay(1100, withSpring(1, { damping: 14, stiffness: 120 })),
-      // Tahan logo selama 800ms, lalu hilangkan
-      withDelay(800, withTiming(0, { duration: 500, easing: Easing.in(Easing.ease) }))
+   logoTranslateY.value = withSequence(
+  withDelay(1100, withSpring(0, { damping: 18, stiffness: 150 })), // naik ke tengah
+  withDelay(900, withTiming(-30, { duration: 500, easing: Easing.in(Easing.ease) })) // exit ke atas
+);
+    logoScale.value = withSequence(
+      withDelay(1100, withSpring(1, { damping: 18, stiffness: 150 })),
+      withDelay(900, withTiming(0.85, { duration: 500 }))
     );
-
-    // Navigasi ke onboarding setelah seluruh sequence 3000ms selesai + sedikit buffer
-    const navigationTimer = setTimeout(() => {
-      router.replace('/onboarding');
-    }, 3200);
-
-    return () => clearTimeout(navigationTimer);
-  }, [router]);
+    logoOpacity.value = withSequence(
+      withDelay(1100, withTiming(1, { duration: 300 })),
+      withDelay(1100, withTiming(0, { duration: 500, easing: Easing.in(Easing.ease) },
+        (finished) => { if (finished) runOnJS(navigate)(); }
+      ))
+    );
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* Background Teal dengan Blobs */}
       <Animated.View style={[StyleSheet.absoluteFill, tealBgStyle]}>
         <View style={styles.blobTop} />
         <View style={styles.blobBottom} />
       </Animated.View>
 
-      {/* Background Putih */}
       <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          whiteBgStyle,
-          { backgroundColor: '#FFFFFF' },
-        ]}
+        style={[StyleSheet.absoluteFill, whiteBgStyle, { backgroundColor: '#FFFFFF' }]}
       />
 
-      {/* Logo */}
       <View style={styles.logoContainer}>
-        <Animated.View style={[styles.logoLayer, stemsStyle]}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.logoLayer, logoStyle]}>
           <Image
             source={require('@/assets/images/logo-shield.png')}
             style={styles.logoImage}
