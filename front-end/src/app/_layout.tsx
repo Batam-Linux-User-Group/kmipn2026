@@ -8,6 +8,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { FontFamily } from "@/constants/fontsfamily";
 
 // Cegah native splash hilang sebelum font siap
 SplashScreen.preventAutoHideAsync();
@@ -37,10 +38,10 @@ export default function RootLayout() {
 
       <Stack.Screen name="onboarding"    options={{ animation: 'fade' }} />
       <Stack.Screen name="auth/login"    options={{ animation: 'fade' }} />
-      <Stack.Screen name="tabs"          options={{ animation: 'fade' }} />
       <Stack.Screen name="assessment"    options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="breathing"     options={{ animation: 'fade' }} />
       <Stack.Screen name="result"        options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="tabs"          options={{ animation: 'fade' }} />
     </Stack>
   );
 }

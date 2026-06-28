@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
 } from 'react-native';
 import Animated, {
   Easing,
@@ -41,27 +42,13 @@ const EXHALE_DURATION = 3000;
 // ─── JEDA Shield Logo (white version for dark bg) ────────────
 function JedaLogoWhite({ size = 48 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-      <Path
-        d="M18 3L6 8v9c0 5.5 3.5 10.7 8 13.5l4 2.5 4-2.5c4.5-2.8 8-8 8-13.5V8L18 3z"
-        stroke="#3BCFA6"
-        strokeWidth={2}
-        fill="transparent"
-      />
-      <Path
-        d="M18 23c2.5-2.5 4-5.5 4-8 0-1.5-1-2.5-2.5-2.5-1 0-1.8.8-2.5 1.5-.7-.7-1.5-1.5-2.5-1.5-1.5 0-2.5 1-2.5 2.5 0 2.5 1.5 5.5 4 8"
-        stroke="#3BCFA6"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18 14v9"
-        stroke="#3BCFA6"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-    </Svg>
+   <View style={styles.logoContainer}>
+         <Image
+           source={require('@/assets/icons/Jeda_Logo.png')}
+           style={[styles.logoImage, { width: size, height: size }]}
+           resizeMode="contain"
+         />
+       </View>
   );
 }
 
@@ -223,9 +210,11 @@ export default function BreathingScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* Header with logo */}
         <View style={styles.headerContainer}>
-          <JedaLogoWhite size={48} />
-          <Text style={styles.logoLabel}>JEDA</Text>
-        </View>
+  <View style={styles.logoRow}>
+    <JedaLogoWhite size={48} />
+    <Text style={styles.logoLabel}>JEDA</Text>
+  </View>
+</View>
 
         {/* Breathing Circle Area */}
         <View style={styles.breathingArea}>
@@ -295,9 +284,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   logoLabel: {
-    fontSize: 12,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#3BCFA6',
+    color: '#ffffff',
     marginTop: 4,
     letterSpacing: 1,
   },
@@ -338,6 +327,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 60, // Added larger margin top to ensure no overlap when the circle scales to 1.8x
   },
+    logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    resizeMode: 'contain',
+  },
+  logoRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 12,
+},
 
   // Bottom Navigation
   bottomNav: {
