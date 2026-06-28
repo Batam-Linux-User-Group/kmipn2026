@@ -8,10 +8,10 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare } from 'lucide-react-native';
+import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare, LogOut } from 'lucide-react-native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import { Image } from "react-native";
-
+import { router } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 
@@ -62,13 +62,25 @@ function ProfileAvatar({ size = 100 }: { size?: number }) {
     </View>
   );
 }
-
 export default function ProfileScreen() {
   const theme = useTheme();
 
-  const handlePressSetting = (title: string) => {
-    Alert.alert('Info', `Membuka halaman ${title}`);
+ const handlePressSetting = (title: string) => {
+  const navigationMap: { [key: string]: () => void } = {
+    'Edit Profile': () => router.push('/tabs/profile/edit'),
+    'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
+    'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
+    'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
+    'Keluar': () => router.replace('/auth/login'),  // replace biar ga bisa back
   };
+
+  const action = navigationMap[title];
+  if (action) {
+    action();
+  } else {
+    console.warn(`No navigation route defined for ${title}`);
+  }
+};    
 
   return (
     <View style={styles.container}>
@@ -77,7 +89,7 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
               <Image
-  source={require('@/assets/images/logo-shield.png')} // sesuaikan path logo kamu
+  source={require('@/assets/images/logo-shield.png')} 
   style={{ width: 38, height: 38 }}
   resizeMode="contain"
 />
@@ -153,6 +165,7 @@ export default function ProfileScreen() {
               { title: 'Pengaturan Akun', Icon: Lock },
               { title: 'Pengaturan Aplikasi', Icon: Settings },
               { title: 'Tentang Aplikasi', Icon: Info },
+              { title: 'Keluar', Icon: LogOut},
             ].map((item, idx) => (
               <Pressable
                 key={idx}

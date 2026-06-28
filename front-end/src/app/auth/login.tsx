@@ -68,7 +68,7 @@ export default function LoginScreen() {
       
       // Navigasi ke halaman utama (tabs)
       // Menggunakan 'replace' agar user tidak bisa back ke halaman login
-      router.replace("/tabs");
+      router.replace("/assessment");
       
     } catch (error) {
       console.error("Error saat login:", error);
@@ -146,19 +146,20 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   welcomeTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#1A1A1A",
+    fontSize: 35,
+    fontWeight: "bold",
+    color: "#000000",
     textAlign: "center",
-    lineHeight: 36,
     marginBottom: 12,
+    fontFamily: "FontFamily.lexendSemiBold",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "400",
-    color: "#3D5A54",
+    color: "#000000",
     textAlign: "center",
     lineHeight: 20,
+    fontFamily : "inria-sans-regular",
   },
   buttonSection: {
     width: "100%",

@@ -68,7 +68,7 @@ export default function ForumScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Image
-              source={require('@/assets/images/logo-shield.png')} // sesuaikan path logo kamu
+              source={require('@/assets/images/logo-shield.png')}
               style={{ width: 38, height: 38 }}
               resizeMode="contain"
             />

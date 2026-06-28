@@ -1,6 +1,3 @@
-// src/screens/AssessmentScreen.tsx
-// Assessment question screen with JEDA-themed UI.
-
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -10,39 +7,24 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 
 import { getNode } from '@/data/assessmentData';
 import { useAssessmentStore } from '@/store/useAssessmentStore';
 
-// ─── JEDA Shield Logo ────────────────────────────────────────
+// ─── Jeda Logo ───────────────────────────────────────────────
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-      <Path
-        d="M18 3L6 8v9c0 5.5 3.5 10.7 8 13.5l4 2.5 4-2.5c4.5-2.8 8-8 8-13.5V8L18 3z"
-        stroke="#1A886A"
-        strokeWidth={2}
-        fill="#C5E3DE"
+    <View style={styles.logoContainer}>
+      <Image
+        source={require('@/assets/icons/Jeda_Logo.png')}
+        style={[styles.logoImage, { width: size, height: size }]}
+        resizeMode="contain"
       />
-      <Path
-        d="M18 23c2.5-2.5 4-5.5 4-8 0-1.5-1-2.5-2.5-2.5-1 0-1.8.8-2.5 1.5-.7-.7-1.5-1.5-2.5-1.5-1.5 0-2.5 1-2.5 2.5 0 2.5 1.5 5.5 4 8"
-        stroke="#1A886A"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18 14v9"
-        stroke="#1A886A"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-    </Svg>
+    </View>
   );
 }
 
@@ -58,7 +40,6 @@ function HighlightedQuestion({
     return <Text style={styles.questionText}>{question}</Text>;
   }
 
-  // Build a regex pattern that matches any of the highlight words
   const pattern = highlightWords
     .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
@@ -102,7 +83,6 @@ export default function AssessmentScreen() {
     answers[currentNodeId]?.optionText ?? null
   );
 
-  // Reset selection when node changes
   React.useEffect(() => {
     setSelectedOptionText(answers[currentNodeId]?.optionText ?? null);
   }, [currentNodeId, answers]);
@@ -124,11 +104,9 @@ export default function AssessmentScreen() {
   const handleNext = useCallback(() => {
     if (!selectedOption || !node) return;
 
-    // Record the answer
     selectOption(node.id, selectedOption.text, selectedOption.score);
 
     if (selectedOption.isTrigger) {
-      // Set pending next node and navigate to breathing screen
       setPendingNextNodeId(selectedOption.next);
       router.push('/breathing');
       return;
@@ -139,14 +117,12 @@ export default function AssessmentScreen() {
       return;
     }
 
-    // Advance to next node
     goToNode(selectedOption.next);
   }, [selectedOption, node, selectOption, goToNode, setPendingNextNodeId, router]);
 
   const handleBack = useCallback(() => {
     const couldGoBack = goBack();
     if (!couldGoBack) {
-      // We're at the first question, go back to home
       router.back();
     }
   }, [goBack, router]);
@@ -173,17 +149,18 @@ export default function AssessmentScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Header: Logo + Title */}
             <View style={styles.headerContainer}>
-              <JedaLogo size={56} />
-              <Text style={styles.logoLabel}>JEDA</Text>
-              <Text style={styles.titleText}>Asesmen Awal</Text>
-              <Text style={styles.subtitleText}>
-                Silahkan Jawab Pertanyaan Berikut Sebelum Mulai{'\n'}Menggunakan Aplikasi
-              </Text>
-            </View>
+  <View style={styles.logoRow}>
+    <JedaLogo size={40} />
+    <Text style={styles.logoLabel}>JEDA</Text>
+  </View>
 
-            {/* Question */}
+  <Text style={styles.titleText}>Asesmen Awal</Text>
+  <Text style={styles.subtitleText}>
+    Silahkan Jawab Pertanyaan Berikut Sebelum Mulai{'\n'}Menggunakan Aplikasi
+  </Text>
+</View>
+
             <View style={styles.questionContainer}>
               <HighlightedQuestion
                 question={node.question}
@@ -191,7 +168,6 @@ export default function AssessmentScreen() {
               />
             </View>
 
-            {/* Options */}
             <View style={styles.optionsContainer}>
               {node.options.map((option) => {
                 const isSelected = selectedOptionText === option.text;
@@ -204,9 +180,7 @@ export default function AssessmentScreen() {
                         ? styles.optionButtonSelected
                         : styles.optionButtonDefault,
                     ]}
-                    onPress={() =>
-                      handleSelectOption(option.text, option.score)
-                    }
+                    onPress={() => handleSelectOption(option.text, option.score)}
                   >
                     <Text
                       style={[
@@ -224,13 +198,11 @@ export default function AssessmentScreen() {
             </View>
           </ScrollView>
 
-          {/* Bottom Navigation Pills */}
           <SafeAreaView edges={['bottom']} style={styles.bottomNav}>
             <Pressable style={styles.pillButton} onPress={handleBack}>
               <Text style={styles.pillButtonText}>Kembali</Text>
             </Pressable>
 
-            {/* Center dot indicator */}
             <View style={styles.dotIndicator} />
 
             <Pressable
@@ -273,53 +245,64 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
   },
-
-  // Header
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    resizeMode: 'contain',
+  },
+  logoRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 12,
+},
   headerContainer: {
     alignItems: 'center',
     paddingTop: 12,
     marginBottom: 24,
   },
   logoLabel: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1A886A',
-    marginTop: 4,
+    color: '#000000',
     letterSpacing: 1,
+    fontFamily: 'Poppins-Bold',
   },
   titleText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1A886A',
+    color: '#000000',
     marginTop: 12,
+    fontFamily: 'Poppins-Bold',
   },
   subtitleText: {
     fontSize: 12,
-    color: '#1A886A',
+    color: '#000000',
     textAlign: 'center',
     marginTop: 4,
-    opacity: 0.7,
     lineHeight: 18,
+    fontFamily: 'poppins-regular', 
   },
-
-  // Question
   questionContainer: {
     marginBottom: 24,
     paddingHorizontal: 8,
+    letterSpacing : -0.9,
+    lineHeight : 45,
   },
   questionText: {
-    fontSize: 22,
+    fontSize: 35,
     fontWeight: '700',
     color: '#000000ff',
     textAlign: 'center',
     lineHeight: 32,
+    fontFamily: 'laxendSemiBold',
   },
   highlightedWord: {
     color: '#3BCFA6',
     fontWeight: '700',
   },
-
-  // Options
   optionsContainer: {
     marginBottom: 20,
     gap: 12,
@@ -348,8 +331,6 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: '#FFFFFF',
   },
-
-  // Bottom Navigation
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
