@@ -288,16 +288,15 @@ const styles = StyleSheet.create({
   questionContainer: {
     marginBottom: 24,
     paddingHorizontal: 8,
-    letterSpacing : -0.9,
-    lineHeight : 45,
   },
   questionText: {
-    fontSize: 35,
+    fontSize: 20,
     fontWeight: '700',
     color: '#000000ff',
     textAlign: 'center',
-    lineHeight: 32,
-    fontFamily: 'laxendSemiBold',
+    lineHeight: 30,
+    letterSpacing: -0.3,
+    fontFamily: 'Lexend_600SemiBold',
   },
   highlightedWord: {
     color: '#3BCFA6',

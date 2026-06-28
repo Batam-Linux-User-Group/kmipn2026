@@ -1,32 +1,24 @@
 // src/screens/BreathingScreen.tsx
-// 30-second breathing exercise with Reanimated circle animation.
+// 30-second breathing exercise with React Native Animated (built-in).
 // Black background, auto-navigates when timer expires.
+// Does NOT use react-native-reanimated, so it is immune to "reduced motion" warnings.
 
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   BackHandler,
   Dimensions,
+  Easing,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Image,
 } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, RadialGradient, Rect, Stop, Path } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
 
@@ -42,13 +34,13 @@ const EXHALE_DURATION = 3000;
 // ─── JEDA Shield Logo (white version for dark bg) ────────────
 function JedaLogoWhite({ size = 48 }: { size?: number }) {
   return (
-   <View style={styles.logoContainer}>
-         <Image
-           source={require('@/assets/icons/Jeda_Logo.png')}
-           style={[styles.logoImage, { width: size, height: size }]}
-           resizeMode="contain"
-         />
-       </View>
+    <View style={styles.logoContainer}>
+      <Image
+        source={require('@/assets/icons/Jeda_Logo.png')}
+        style={[styles.logoImage, { width: size, height: size }]}
+        resizeMode="contain"
+      />
+    </View>
   );
 }
 
@@ -62,52 +54,70 @@ export default function BreathingScreen() {
   const phaseRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasNavigated = useRef(false);
 
-  // Reanimated shared value for circle scale
-  const circleScale = useSharedValue(1.0);
-  const waveScale = useSharedValue(1.0);
-  const waveOpacity = useSharedValue(0.0);
+  // React Native Animated Values
+  const circleScale = useRef(new Animated.Value(1.0)).current;
+  const waveScale = useRef(new Animated.Value(1.0)).current;
+  const waveOpacity = useRef(new Animated.Value(0.0)).current;
 
-  // Derived value to determine phase text (inhale when expanding, exhale when contracting)
-  const animationProgress = useSharedValue(0); // 0 = start of cycle, goes 0→1 over 6s
-
-  // Start the animation
+  // Start the animation loops
   useEffect(() => {
-    // Smooth Scale animation for main circle: 1.0 → 1.8 (3s) → 1.0 (3s), repeat
-    circleScale.value = withRepeat(
-      withSequence(
-        withTiming(1.8, {
+    // 1. Circle Scale Animation: 1.0 → 1.8 (3s) → 1.0 (3s), infinite
+    const circleAnim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(circleScale, {
+          toValue: 1.8,
           duration: INHALE_DURATION,
           easing: Easing.bezier(0.4, 0, 0.2, 1),
+          useNativeDriver: true,
         }),
-        withTiming(1.0, {
+        Animated.timing(circleScale, {
+          toValue: 1.0,
           duration: EXHALE_DURATION,
           easing: Easing.bezier(0.4, 0, 0.2, 1),
-        })
-      ),
-      -1, // infinite repeat
-      false // don't reverse
+          useNativeDriver: true,
+        }),
+      ])
     );
 
-    // Wave Background animation
-    waveScale.value = withRepeat(
-      withTiming(2.5, {
-        duration: CYCLE_DURATION,
-        easing: Easing.out(Easing.quad),
-      }),
-      -1,
-      false
+    // 2. Wave Scale Animation: 1.0 → 2.5 (6s), resets to 1.0 internally, infinite
+    // To make it repeat seamlessly, we animate 1 -> 2.5, then jump back to 1
+    const waveScaleAnim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveScale, {
+          toValue: 2.5,
+          duration: CYCLE_DURATION,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(waveScale, {
+          toValue: 1.0, // Instantly jump back
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
     );
 
-    waveOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.4, { duration: INHALE_DURATION }),
-        withTiming(0.0, { duration: EXHALE_DURATION })
-      ),
-      -1,
-      false
+    // 3. Wave Opacity Animation: 0.0 → 0.4 (3s) → 0.0 (3s), infinite
+    const waveOpacityAnim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(waveOpacity, {
+          toValue: 0.4,
+          duration: INHALE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(waveOpacity, {
+          toValue: 0.0,
+          duration: EXHALE_DURATION,
+          useNativeDriver: true,
+        }),
+      ])
     );
 
-    // Track phase text via interval since useDerivedValue can't set React state
+    circleAnim.start();
+    waveScaleAnim.start();
+    waveOpacityAnim.start();
+
+    // Track phase text via interval (3s inhale, 3s exhale)
     let elapsed = 0;
     const phaseInterval = setInterval(() => {
       const cyclePos = elapsed % 6;
@@ -121,12 +131,13 @@ export default function BreathingScreen() {
     phaseRef.current = phaseInterval;
 
     return () => {
-      cancelAnimation(circleScale);
-      cancelAnimation(waveScale);
-      cancelAnimation(waveOpacity);
+      // Cleanup: stop all animations and intervals
+      circleAnim.stop();
+      waveScaleAnim.stop();
+      waveOpacityAnim.stop();
       if (phaseRef.current) clearInterval(phaseRef.current);
     };
-  }, []);
+  }, [circleScale, waveScale, waveOpacity]);
 
   // 30-second countdown timer
   useEffect(() => {
@@ -173,19 +184,18 @@ export default function BreathingScreen() {
     }
   }, [pendingNextNodeId, goToNode, setPendingNextNodeId, router]);
 
-  const animatedCircleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: circleScale.value }],
-  }));
-
-  const animatedWaveStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: waveScale.value }],
-    opacity: waveOpacity.value,
-  }));
-
   return (
     <View style={styles.container}>
       {/* Background Gradient Wave */}
-      <Animated.View style={[styles.waveContainer, animatedWaveStyle]}>
+      <Animated.View
+        style={[
+          styles.waveContainer,
+          {
+            transform: [{ scale: waveScale }],
+            opacity: waveOpacity,
+          },
+        ]}
+      >
         <Svg height={SCREEN_HEIGHT * 1.5} width={SCREEN_HEIGHT * 1.5} viewBox="0 0 100 100">
           <Defs>
             <RadialGradient
@@ -210,17 +220,22 @@ export default function BreathingScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* Header with logo */}
         <View style={styles.headerContainer}>
-  <View style={styles.logoRow}>
-    <JedaLogoWhite size={48} />
-    <Text style={styles.logoLabel}>JEDA</Text>
-  </View>
-</View>
+          <View style={styles.logoRow}>
+            <JedaLogoWhite size={48} />
+            <Text style={styles.logoLabel}>JEDA</Text>
+          </View>
+        </View>
 
         {/* Breathing Circle Area */}
         <View style={styles.breathingArea}>
           <View style={styles.circleContainer}>
             {/* Animated Circle Outline */}
-            <Animated.View style={[styles.circleOutline, animatedCircleStyle]}>
+            <Animated.View
+              style={[
+                styles.circleOutline,
+                { transform: [{ scale: circleScale }] },
+              ]}
+            >
               {/* Text inside circle */}
               <Text style={styles.breathingPhaseText}>{breathingText}</Text>
             </Animated.View>
@@ -327,7 +342,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 60, // Added larger margin top to ensure no overlap when the circle scales to 1.8x
   },
-    logoContainer: {
+  logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -335,11 +350,11 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   logoRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 8,
-  marginBottom: 12,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
 
   // Bottom Navigation
   bottomNav: {
