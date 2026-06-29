@@ -12,39 +12,24 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
 
-// ─── JEDA Shield Logo ────────────────────────────────────────
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-      <Path
-        d="M18 3L6 8v9c0 5.5 3.5 10.7 8 13.5l4 2.5 4-2.5c4.5-2.8 8-8 8-13.5V8L18 3z"
-        stroke="#1A886A"
-        strokeWidth={2}
-        fill="#C5E3DE"
-      />
-      <Path
-        d="M18 23c2.5-2.5 4-5.5 4-8 0-1.5-1-2.5-2.5-2.5-1 0-1.8.8-2.5 1.5-.7-.7-1.5-1.5-2.5-1.5-1.5 0-2.5 1-2.5 2.5 0 2.5 1.5 5.5 4 8"
-        stroke="#1A886A"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18 14v9"
-        stroke="#1A886A"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-    </Svg>
+     <View>
+             <Image
+               source={require('@/assets/icons/Jeda_Logo.png')}
+               style={[ { width: size, height: size }]}
+               resizeMode="contain"
+             />
+           </View>
   );
 }
-
 export default function ResultScreen() {
   const router = useRouter();
   const {
@@ -187,12 +172,13 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1A886A',
+    color: '#000000',
     marginTop: 12,
+    fontFamily: 'Laxend'
   },
   subtitleText: {
     fontSize: 12,
-    color: '#1A886A',
+    color: '#000000',
     textAlign: 'center',
     marginTop: 4,
     opacity: 0.7,
@@ -216,7 +202,7 @@ const styles = StyleSheet.create({
   },
   statusDescription: {
     fontSize: 14,
-    color: '#1A886A',
+    color: '#000000',
     textAlign: 'center',
     lineHeight: 22,
     opacity: 0.8,
