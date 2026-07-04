@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
   },
   titleText: {
-    fontSize: 22,
+    fontSize: 35,
     fontWeight: '700',
     color: '#000000',
     marginTop: 12,
@@ -290,12 +290,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   questionText: {
-    fontSize: 20,
+    fontSize: 35,
     fontWeight: '700',
     color: '#000000ff',
     textAlign: 'center',
-    lineHeight: 30,
-    letterSpacing: -0.3,
+    lineHeight: 45,
+    letterSpacing: -0.9,
     fontFamily: 'Lexend_600SemiBold',
   },
   highlightedWord: {

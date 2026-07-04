@@ -160,11 +160,16 @@ export default function AppTabs() {
       <Tabs.Screen name="forum"        options={{ title: "Forum",    headerShown: false }} />
       <Tabs.Screen name="progress"     options={{ title: "Progress", headerShown: false }} />
       <Tabs.Screen name="profile"      options={{ title: "Profile",  headerShown: false }} />
-      <Tabs.Screen name="forum-detail" options={{ href: null,        headerShown: false }} />
-      <Tabs.Screen name="forum-create" options={{ href: null,        headerShown: false }} />
+      
+     
+      
+      <Tabs.Screen name="forum-detail" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="forum-create" options={{ href: null, headerShown: false }} />
     </Tabs>
   );
 }
+export const dynamic = 'force-dynamic';
+
 
 const styles = StyleSheet.create({
   tabBarContainer: {
