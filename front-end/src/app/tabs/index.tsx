@@ -7,15 +7,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View
+  View,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
-import { Image } from "react-native";
 
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
-
 
 function CalendarIcon() {
   return (
@@ -71,19 +70,18 @@ function BookIcon() {
   );
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Selamat Pagi';
+  if (hour < 15) return 'Selamat Siang';
+  if (hour < 18) return 'Selamat Sore';
+  return 'Selamat Malam';
+}
+
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-
   const [mood, setMood] = useState<"tidak" | "ya">("ya");
-
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (secs % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  };
 
   return (
     <View style={styles.container}>
@@ -97,16 +95,14 @@ export default function HomeScreen() {
         {/* HEADER SECTION */}
         <View style={styles.header}>
           <View style={styles.profileContainer}>
-<Image
-  source={require('@/assets/images/logo-shield.png')}
-  style={{ width: 38, height: 38 }}
-  resizeMode="contain"
-/>
+            <Image
+              source={require('@/assets/images/logo-shield.png')}
+              style={{ width: 38, height: 38 }}
+              resizeMode="contain"
+            />
             <View style={styles.profileText}>
-              <Text
-                style={[styles.greetingText, { color: theme.mintDark + "99" }]}
-              >
-                Selamat Pagi
+              <Text style={[styles.greetingText, { color: theme.mintDark + "99" }]}>
+                {getGreeting()}
               </Text>
               <Text style={[styles.nameText, { color: theme.mintDark }]}>
                 Fawwaz Khairiy Wahid
@@ -114,17 +110,8 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <View
-            style={[
-              styles.streakContainer,
-              { backgroundColor: theme.mintStreakBackground },
-            ]}
-          >
-            <Flame
-              size={20}
-              color={theme.streakOrange}
-              fill={theme.streakOrange}
-            />
+          <View style={[styles.streakContainer, { backgroundColor: theme.mintStreakBackground }]}>
+            <Flame size={20} color={theme.streakOrange} fill={theme.streakOrange} />
             <Text style={[styles.streakText, { color: theme.text }]}>7</Text>
           </View>
         </View>
@@ -152,27 +139,18 @@ export default function HomeScreen() {
 
           {/* MOOD BUTTONS */}
           <View style={styles.moodButtonsRow}>
-            {/* TIDAK BUTTON */}
             <Pressable
               onPress={() => setMood("tidak")}
               style={[
                 styles.moodButton,
                 mood === "tidak"
-                  ? {
-                      backgroundColor: theme.mintDark,
-                      borderColor: theme.mintDark,
-                    }
-                  : {
-                      backgroundColor: "#FFFFFF",
-                      borderColor: theme.mintBorder,
-                    },
+                  ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
+                  : { backgroundColor: "#FFFFFF", borderColor: theme.mintBorder },
               ]}
             >
               <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
                 <Circle
-                  cx={12}
-                  cy={12}
-                  r={10}
+                  cx={12} cy={12} r={10}
                   stroke={mood === "tidak" ? "#FFFFFF" : theme.mintDark}
                   strokeWidth={2.5}
                 />
@@ -189,37 +167,23 @@ export default function HomeScreen() {
                   strokeLinecap="round"
                 />
               </Svg>
-              <Text
-                style={[
-                  styles.moodButtonText,
-                  { color: mood === "tidak" ? "#FFFFFF" : theme.mintDark },
-                ]}
-              >
+              <Text style={[styles.moodButtonText, { color: mood === "tidak" ? "#FFFFFF" : theme.mintDark }]}>
                 Tidak
               </Text>
             </Pressable>
 
-            {/* YA BUTTON */}
             <Pressable
               onPress={() => setMood("ya")}
               style={[
                 styles.moodButton,
                 mood === "ya"
-                  ? {
-                      backgroundColor: theme.mintDark,
-                      borderColor: theme.mintDark,
-                    }
-                  : {
-                      backgroundColor: "#FFFFFF",
-                      borderColor: theme.mintBorder,
-                    },
+                  ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
+                  : { backgroundColor: "#FFFFFF", borderColor: theme.mintBorder },
               ]}
             >
               <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
                 <Circle
-                  cx={12}
-                  cy={12}
-                  r={10}
+                  cx={12} cy={12} r={10}
                   stroke={mood === "ya" ? "#FFFFFF" : theme.mintDark}
                   strokeWidth={2.5}
                 />
@@ -236,12 +200,7 @@ export default function HomeScreen() {
                   strokeLinecap="round"
                 />
               </Svg>
-              <Text
-                style={[
-                  styles.moodButtonText,
-                  { color: mood === "ya" ? "#FFFFFF" : theme.mintDark },
-                ]}
-              >
+              <Text style={[styles.moodButtonText, { color: mood === "ya" ? "#FFFFFF" : theme.mintDark }]}>
                 Ya
               </Text>
             </Pressable>
@@ -272,12 +231,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.actionCardContent}>
               <Text style={styles.actionCardTitle}>Daily Question</Text>
-              <Text
-                style={[
-                  styles.actionCardSubtitle,
-                  { color: theme.cardSubtitle },
-                ]}
-              >
+              <Text style={[styles.actionCardSubtitle, { color: theme.cardSubtitle }]}>
                 Answer to activate streak
               </Text>
             </View>
@@ -295,12 +249,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.actionCardContent}>
               <Text style={styles.actionCardTitle}>Self Journalling</Text>
-              <Text
-                style={[
-                  styles.actionCardSubtitle,
-                  { color: theme.cardSubtitle },
-                ]}
-              >
+              <Text style={[styles.actionCardSubtitle, { color: theme.cardSubtitle }]}>
                 Manual Input
               </Text>
             </View>
@@ -385,7 +334,7 @@ const styles = StyleSheet.create({
   },
   whiteCardContent: {
     padding: Spacing.four,
-    paddingBottom: Spacing.six + 90, 
+    paddingBottom: Spacing.six + 90,
   },
   promptText: {
     fontSize: 18,

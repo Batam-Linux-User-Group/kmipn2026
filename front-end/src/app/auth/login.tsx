@@ -39,11 +39,11 @@ function GoogleIcon() {
 function JEDALogo() {
   return (
     <View style={styles.logoContainer}>
-      <Image 
-        source={require('@/assets/icons/Jeda_Logo.png')} 
+      <Image
+        source={require('@/assets/icons/Jeda_Logo.png')}
         style={styles.logoImage}
         resizeMode="contain"
-      /> 
+      />
     </View>
   );
 }
@@ -54,26 +54,10 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    
-    try {
-      // TODO: Tambahkan logika autentikasi Google di sini
-      // Contoh:
-      // await GoogleSignin.hasPlayServices();
-      // const userInfo = await GoogleSignin.signIn();
-      
-      // Simulasi delay proses login (hapus ini setelah implementasi Google Auth)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Login berhasil!");
-      
-      // Navigasi ke halaman utama (tabs)
-      // Menggunakan 'replace' agar user tidak bisa back ke halaman login
-      router.replace("/assessment");
-      
-    } catch (error) {
-      console.error("Error saat login:", error);
-      setIsLoading(false);
-    }
+    // Dummy login — langsung ke tabs
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsLoading(false);
+    router.replace('/tabs');
   };
 
   return (
@@ -151,7 +135,6 @@ const styles = StyleSheet.create({
     color: "#000000",
     textAlign: "center",
     marginBottom: 12,
-    fontFamily: "FontFamily.lexendSemiBold",
   },
   subtitle: {
     fontSize: 12,
@@ -159,7 +142,6 @@ const styles = StyleSheet.create({
     color: "#000000",
     textAlign: "center",
     lineHeight: 20,
-    fontFamily : "inria-sans-regular",
   },
   buttonSection: {
     width: "100%",

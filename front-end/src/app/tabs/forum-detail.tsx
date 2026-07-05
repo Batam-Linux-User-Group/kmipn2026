@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Clock, Heart, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,9 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
-import { Post, postsStore } from '@/constants/posts-data';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useForumStore } from '@/store/useForumStore';
 
 function CheckmarkIcon() {
   return (
@@ -28,59 +29,82 @@ function CheckmarkIcon() {
   );
 }
 
+function formatTime(dateStr: string): string {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes} menit lalu`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    const days = Math.floor(hours / 24);
+    return `${days} hari lalu`;
+  } catch {
+    return '';
+  }
+}
+
 export default function ForumDetailScreen() {
   const theme = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [post, setPost] = useState<Post | null>(null);
+  const {
+    activePost,
+    isLoadingDetail,
+    detailError,
+    isSubmittingComment,
+    fetchPostDetail,
+    togglePostLike,
+    createComment,
+    toggleCommentLike,
+  } = useForumStore();
+
   const [commentText, setCommentText] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Load post details and subscribe to updates
   useEffect(() => {
-    const postId = id || 'post-1'; // fallback to first post if no id provided
-
-    const unsubscribe = postsStore.subscribe(() => {
-      // Keep state updates inside the store callback to avoid setState-in-effect linting.
-      setPost(postsStore.getPostById(postId) || null);
-    });
-
-    // Initial load: schedule after effect commits.
-    queueMicrotask(() => {
-      // Defer to the next microtask so the effect body doesn't synchronously trigger setState.
-      setPost(postsStore.getPostById(postId) || null);
-    });
-
-
-    return unsubscribe;
+    if (id) {
+      fetchPostDetail(id);
+    }
   }, [id]);
 
   const handleLike = () => {
-    if (post) {
-      postsStore.likePost(post.id);
+    if (activePost) {
+      togglePostLike(activePost.id);
     }
   };
 
-  const handleSendComment = () => {
-    if (post && commentText.trim()) {
-      postsStore.addComment(post.id, commentText.trim());
-      setCommentText('');
-      // Scroll to bottom of comments list after comment is added
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
+  const handleSendComment = async () => {
+    if (!activePost || !commentText.trim()) return;
+    await createComment(activePost.id, commentText.trim());
+    setCommentText('');
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 150);
   };
 
-  if (!post) {
+  // Loading state
+  if (isLoadingDetail) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: theme.textSecondary }}>Postingan tidak ditemukan.</Text>
+        <ActivityIndicator size="large" color="#3BCFA6" />
+      </View>
+    );
+  }
+
+  // Error state
+  if (detailError || !activePost) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: theme.textSecondary }}>
+          {detailError ?? 'Postingan tidak ditemukan.'}
+        </Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: 12 }}>
           <Text style={{ color: theme.mintDark, fontWeight: '700' }}>Kembali</Text>
         </Pressable>
       </View>
     );
   }
+
+  const comments = activePost.comments ?? [];
 
   return (
     <View style={styles.container}>
@@ -91,13 +115,12 @@ export default function ForumDetailScreen() {
             <ArrowLeft size={24} color={theme.mintDark} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Baca Postingan</Text>
-          <View style={{ width: 40 }} /> {/* balance back button width */}
+          <View style={{ width: 40 }} />
         </View>
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
           <ScrollView
             ref={scrollViewRef}
@@ -107,55 +130,59 @@ export default function ForumDetailScreen() {
             {/* MAIN POST CONTENT */}
             <View style={styles.postDetailContainer}>
               <View style={styles.userInfoRow}>
-                <Avatar type={post.avatarType} size={44} />
+                <Avatar type="user" size={44} />
                 <View style={styles.userTextContainer}>
                   <View style={styles.usernameRow}>
-                    <Text style={styles.username}>{post.username}</Text>
-                    {post.hasCheckmark && <CheckmarkIcon />}
+                    <Text style={styles.username}>
+                      {activePost.user?.display_name ?? activePost.user?.username ?? 'Anonim'}
+                    </Text>
+                    {activePost.user?.is_verified && <CheckmarkIcon />}
                   </View>
-                  <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>{post.role}</Text>
+                  <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>
+                    {activePost.user?.role ?? 'Anggota'}
+                  </Text>
                 </View>
 
                 {/* Category tag */}
                 <View style={[styles.tagPill, { borderColor: theme.mintBorder }]}>
                   <Text style={[styles.tagText, { color: theme.mintDark }]}>
-                    {post.category.toUpperCase()}
+                    {activePost.category?.name?.toUpperCase() ?? ''}
                   </Text>
                 </View>
               </View>
 
-              <Text style={styles.postBodyText}>{post.content}</Text>
+              <Text style={styles.postBodyText}>{activePost.content}</Text>
 
-              {/* Engagement Stats row */}
+              {/* Engagement Stats */}
               <View style={styles.engagementRow}>
                 <View style={styles.timeSection}>
                   <Clock size={16} color="#7C8C85" style={{ marginRight: 4 }} />
-                  <Text style={styles.timeText}>{post.timeText}</Text>
+                  <Text style={styles.timeText}>{formatTime(activePost.created_at)}</Text>
                 </View>
 
                 <Pressable onPress={handleLike} style={styles.likesSection}>
                   <Heart size={18} color="#FF7B6E" fill="#FF7B6E" style={{ marginRight: 6 }} />
-                  <Text style={styles.likesText}>{post.likes} Suka</Text>
+                  <Text style={styles.likesText}>{activePost.likes_count} Suka</Text>
                 </Pressable>
               </View>
             </View>
 
             {/* COMMENTS HEADER */}
-            <Text style={[styles.commentsSectionTitle, { color: theme.mintDark }]}>Komentar</Text>
+            <Text style={[styles.commentsSectionTitle, { color: theme.mintDark }]}>
+              Komentar ({activePost.comments_count})
+            </Text>
 
             {/* COMMENTS LIST */}
-            {post.commentsList.map((comment) => (
+            {comments.map((comment) => (
               <View key={comment.id} style={styles.commentCard}>
                 <View style={styles.commentHeader}>
                   <View style={styles.commentUserWrapper}>
-                    <Avatar type={comment.avatarType} size={36} />
+                    <Avatar type="user" size={36} />
                     <View style={styles.commentUserText}>
                       <View style={styles.commentUserRow}>
-                        <Text style={styles.commentUsername}>{comment.username}</Text>
-                        <View style={styles.streakIndicator}>
-                          <Text style={styles.streakFlame}>🔥</Text>
-                          <Text style={styles.streakCount}>{comment.streak}</Text>
-                        </View>
+                        <Text style={styles.commentUsername}>
+                          {comment.user?.display_name ?? comment.user?.username ?? 'Anonim'}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -163,34 +190,28 @@ export default function ForumDetailScreen() {
 
                 <Text style={styles.commentContent}>{comment.content}</Text>
 
-                {/* Comment Footer */}
                 <View style={styles.commentFooter}>
-                  <Text style={styles.commentTime}>{comment.timeText}</Text>
-                  
-                  {comment.repliesText && (
-                    <Pressable>
-                      <Text style={[styles.replyLink, { color: theme.mintDark }]}>
-                        {comment.repliesText}
-                      </Text>
-                    </Pressable>
-                  )}
+                  <Text style={styles.commentTime}>{formatTime(comment.created_at)}</Text>
 
-                  <Pressable style={styles.commentLikes}>
+                  <Pressable
+                    style={styles.commentLikes}
+                    onPress={() => toggleCommentLike(comment.id)}
+                  >
                     <Heart size={13} color="#7C8C85" style={{ marginRight: 4 }} />
-                    <Text style={styles.commentLikesText}>{comment.likes}</Text>
+                    <Text style={styles.commentLikesText}>{comment.likes_count}</Text>
                   </Pressable>
                 </View>
               </View>
             ))}
 
-            {post.commentsList.length === 0 && (
+            {comments.length === 0 && (
               <Text style={[styles.noCommentsText, { color: theme.cardSubtitle }]}>
                 Belum ada komentar. Jadilah yang pertama memberikan saran!
               </Text>
             )}
           </ScrollView>
 
-          {/* INPUT BAR AT BOTTOM */}
+          {/* INPUT BAR */}
           <View style={styles.inputBarContainer}>
             <TextInput
               value={commentText}
@@ -202,14 +223,18 @@ export default function ForumDetailScreen() {
             />
             <Pressable
               onPress={handleSendComment}
-              disabled={!commentText.trim()}
+              disabled={!commentText.trim() || isSubmittingComment}
               style={({ pressed }) => [
                 styles.sendButton,
                 { backgroundColor: theme.mintMedium },
-                (!commentText.trim() || pressed) && { opacity: 0.8 }
+                (!commentText.trim() || pressed || isSubmittingComment) && { opacity: 0.8 },
               ]}
             >
-              <Send size={18} color="#FFFFFF" style={{ marginLeft: 2 }} />
+              {isSubmittingComment ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Send size={18} color="#FFFFFF" style={{ marginLeft: 2 }} />
+              )}
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -219,13 +244,8 @@ export default function ForumDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -233,21 +253,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
   },
-  backButton: {
-    padding: Spacing.one,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  keyboardView: {
-    flex: 1,
-  },
+  backButton: { padding: Spacing.one },
+  headerTitle: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  keyboardView: { flex: 1 },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 100, // leave space for absolute comment input
+    paddingBottom: 100,
   },
   postDetailContainer: {
     backgroundColor: '#FFFFFF',
@@ -262,24 +274,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  userTextContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  usernameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  username: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A2520',
-  },
-  userRole: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 2,
-  },
+  userTextContainer: { flex: 1, marginLeft: 12 },
+  usernameRow: { flexDirection: 'row', alignItems: 'center' },
+  username: { fontSize: 16, fontWeight: '700', color: '#1A2520' },
+  userRole: { fontSize: 12, fontWeight: '500', marginTop: 2 },
   tagPill: {
     borderWidth: 1,
     borderRadius: 12,
@@ -287,11 +285,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: '#FAFDFD',
   },
-  tagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+  tagText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
   postBodyText: {
     fontSize: 16,
     color: '#283830',
@@ -307,31 +301,16 @@ const styles = StyleSheet.create({
     borderTopColor: '#F0F2F2',
     paddingTop: 14,
   },
-  timeSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 13,
-    color: '#7C8C85',
-    fontWeight: '600',
-  },
+  timeSection: { flexDirection: 'row', alignItems: 'center' },
+  timeText: { fontSize: 13, color: '#7C8C85', fontWeight: '600' },
   likesSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  likesText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#11221A',
-  },
-  commentsSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: Spacing.three,
-  },
+  likesText: { fontSize: 14, fontWeight: '700', color: '#11221A' },
+  commentsSectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: Spacing.three },
   commentCard: {
     backgroundColor: '#E8FBF5',
     borderRadius: 20,
@@ -348,36 +327,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  commentUserWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  commentUserText: {
-    marginLeft: 10,
-  },
-  commentUserRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  commentUsername: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A2520',
-  },
-  streakIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 6,
-  },
-  streakFlame: {
-    fontSize: 12,
-  },
-  streakCount: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FF7B6E',
-    marginLeft: 2,
-  },
+  commentUserWrapper: { flexDirection: 'row', alignItems: 'center' },
+  commentUserText: { marginLeft: 10 },
+  commentUserRow: { flexDirection: 'row', alignItems: 'center' },
+  commentUsername: { fontSize: 14, fontWeight: '700', color: '#1A2520' },
   commentContent: {
     fontSize: 14,
     color: '#283830',
@@ -391,29 +344,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  commentTime: {
-    fontSize: 12,
-    color: '#7C8C85',
-    fontWeight: '500',
-  },
-  replyLink: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  commentLikes: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  commentLikesText: {
-    fontSize: 12,
-    color: '#7C8C85',
-    fontWeight: '600',
-  },
-  noCommentsText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 14,
-  },
+  commentTime: { fontSize: 12, color: '#7C8C85', fontWeight: '500' },
+  commentLikes: { flexDirection: 'row', alignItems: 'center' },
+  commentLikesText: { fontSize: 12, color: '#7C8C85', fontWeight: '600' },
+  noCommentsText: { textAlign: 'center', marginTop: 20, fontSize: 14 },
   inputBarContainer: {
     position: 'absolute',
     bottom: 15,

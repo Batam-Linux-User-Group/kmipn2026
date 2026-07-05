@@ -194,7 +194,7 @@ export default function AppSettingsScreen() {
 
         {/* Logout Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton}>
+          <TouchableOpacity style={styles.logoutButton} onPress={() => router.replace('/auth/login')}>
             <LogOut size={20} color="#EF4444" />
             <Text style={styles.logoutButtonText}>Keluar dari Aplikasi</Text>
           </TouchableOpacity>

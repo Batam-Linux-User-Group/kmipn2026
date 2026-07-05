@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   View,
   Text,
   Pressable,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare, LogOut } from 'lucide-react-native';
@@ -14,6 +14,7 @@ import { Image } from "react-native";
 import { router } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
+import { usersApi, User, UserStreak } from '@/services/api';
 
 
 // Custom high-fidelity profile avatar (green haired boy with sunglasses & hoodie)
@@ -64,6 +65,26 @@ function ProfileAvatar({ size = 100 }: { size?: number }) {
 }
 export default function ProfileScreen() {
   const theme = useTheme();
+  const [user, setUser] = useState<User | null>(null);
+  const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    usersApi.getMe()
+      .then((res) => {
+        if (!mounted) return;
+        setUser(res.user);
+        setStreak(res.streak);
+      })
+      .catch((err) => console.error('[Profile] getMe error:', err))
+      .finally(() => { if (mounted) setIsLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  const displayName = user?.display_name || user?.username || 'Pengguna JEDA';
+  const currentStreak = streak?.current_streak ?? 0;
+  const modeText = user?.is_anonymous ? 'Mode Anonim' : 'Mode Publik';
 
  const handlePressSetting = (title: string) => {
   const navigationMap: { [key: string]: () => void } = {
@@ -71,16 +92,11 @@ export default function ProfileScreen() {
     'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
     'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
     'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
-    'Keluar': () => router.replace('/auth/login'), 
+    'Keluar': () => router.replace('/auth/login'),
   };
-
   const action = navigationMap[title];
-  if (action) {
-    action();
-  } else {
-    console.warn(`No navigation route defined for ${title}`);
-  }
-};    
+  if (action) action();
+};
 
   return (
     <View style={styles.container}>
@@ -88,11 +104,11 @@ export default function ProfileScreen() {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-              <Image
-  source={require('@/assets/images/logo-shield.png')} 
-  style={{ width: 38, height: 38 }}
-  resizeMode="contain"
-/>
+            <Image
+              source={require('@/assets/images/logo-shield.png')}
+              style={{ width: 38, height: 38 }}
+              resizeMode="contain"
+            />
             <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Profile</Text>
           </View>
           <Pressable style={styles.bellButton}>
@@ -100,91 +116,92 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* PROFILE CARD */}
-          <View style={styles.profileHeaderContainer}>
-            <ProfileAvatar size={105} />
-            <Text style={styles.usernameText}>TheLittleRabbit90</Text>
-            <Text style={styles.modeText}>Mode Anonim</Text>
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#3BCFA6" />
           </View>
-
-          {/* QUICK STATS ROW */}
-          <View style={styles.quickStatsRow}>
-            <View style={styles.quickStatCard}>
-              <Flame size={20} color="#0FB184" style={styles.quickStatIcon} />
-              <Text style={styles.quickStatValue}>7 Hari</Text>
-              <Text style={styles.quickStatLabel}>LOGIN</Text>
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* PROFILE CARD */}
+            <View style={styles.profileHeaderContainer}>
+              <ProfileAvatar size={105} />
+              <Text style={styles.usernameText}>{displayName}</Text>
+              <Text style={styles.modeText}>{modeText}</Text>
             </View>
-            <View style={styles.quickStatCard}>
-              <Text style={styles.quickStatValue}>Baik</Text>
-              <Text style={styles.quickStatLabel}>TINGKAT EMOSIONAL</Text>
-            </View>
-          </View>
 
-          {/* KOMUNITAS CARD */}
-          <View style={styles.communityCard}>
-            <Text style={styles.communityTitle}>KOMUNITAS</Text>
-            
-            <View style={styles.communityStatsRow}>
-              {/* Stat Column 1 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#FCE4EC' }]}>
-                  <SquarePen size={20} color="#EC407A" />
-                </View>
-                <Text style={styles.communityStatValue}>4</Text>
-                <Text style={styles.communityStatLabel}>Postingan</Text>
+            {/* QUICK STATS ROW */}
+            <View style={styles.quickStatsRow}>
+              <View style={styles.quickStatCard}>
+                <Flame size={20} color="#0FB184" style={styles.quickStatIcon} />
+                <Text style={styles.quickStatValue}>{currentStreak} Hari</Text>
+                <Text style={styles.quickStatLabel}>STREAK</Text>
               </View>
-
-              {/* Stat Column 2 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#E0F2F1' }]}>
-                  <MessageSquare size={20} color="#00796B" />
-                </View>
-                <Text style={styles.communityStatValue}>21</Text>
-                <Text style={styles.communityStatLabel}>Komentar</Text>
-              </View>
-
-              {/* Stat Column 3 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-                  <Heart size={20} color="#388E3C" />
-                </View>
-                <Text style={styles.communityStatValue}>147</Text>
-                <Text style={styles.communityStatLabel}>Total Suka</Text>
+              <View style={styles.quickStatCard}>
+                <Text style={styles.quickStatValue}>
+                  {user?.is_verified ? 'Terverifikasi' : 'Anggota'}
+                </Text>
+                <Text style={styles.quickStatLabel}>STATUS</Text>
               </View>
             </View>
-          </View>
 
-          {/* SETTINGS LIST */}
-          <View style={styles.settingsList}>
-            {[
-              { title: 'Edit Profile', Icon: Smile },
-              { title: 'Pengaturan Akun', Icon: Lock },
-              { title: 'Pengaturan Aplikasi', Icon: Settings },
-              { title: 'Tentang Aplikasi', Icon: Info },
-              { title: 'Keluar', Icon: LogOut},
-            ].map((item, idx) => (
-              <Pressable
-                key={idx}
-                onPress={() => handlePressSetting(item.title)}
-                style={({ pressed }) => [
-                  styles.settingRow,
-                  pressed && { opacity: 0.8 }
-                ]}
-              >
-                <View style={styles.settingRowLeft}>
-                  <item.Icon size={20} color={theme.mintDark} style={{ marginRight: 12 }} />
-                  <Text style={styles.settingText}>{item.title}</Text>
+            {/* KOMUNITAS CARD */}
+            <View style={styles.communityCard}>
+              <Text style={styles.communityTitle}>KOMUNITAS</Text>
+              <View style={styles.communityStatsRow}>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#FCE4EC' }]}>
+                    <SquarePen size={20} color="#EC407A" />
+                  </View>
+                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatLabel}>Postingan</Text>
                 </View>
-                <ChevronRight size={18} color="#B0C2B8" />
-              </Pressable>
-            ))}
-          </View>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E0F2F1' }]}>
+                    <MessageSquare size={20} color="#00796B" />
+                  </View>
+                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatLabel}>Komentar</Text>
+                </View>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
+                    <Heart size={20} color="#388E3C" />
+                  </View>
+                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatLabel}>Total Suka</Text>
+                </View>
+              </View>
+            </View>
 
-        </ScrollView>
+            {/* SETTINGS LIST */}
+            <View style={styles.settingsList}>
+              {[
+                { title: 'Edit Profile', Icon: Smile },
+                { title: 'Pengaturan Akun', Icon: Lock },
+                { title: 'Pengaturan Aplikasi', Icon: Settings },
+                { title: 'Tentang Aplikasi', Icon: Info },
+                { title: 'Keluar', Icon: LogOut },
+              ].map((item, idx) => (
+                <Pressable
+                  key={idx}
+                  onPress={() => handlePressSetting(item.title)}
+                  style={({ pressed }) => [
+                    styles.settingRow,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                >
+                  <View style={styles.settingRowLeft}>
+                    <item.Icon size={20} color={theme.mintDark} style={{ marginRight: 12 }} />
+                    <Text style={styles.settingText}>{item.title}</Text>
+                  </View>
+                  <ChevronRight size={18} color="#B0C2B8" />
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        )}
       </SafeAreaView>
     </View>
   );
