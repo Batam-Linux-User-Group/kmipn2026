@@ -71,7 +71,7 @@ export default function ProfileScreen() {
     'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
     'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
     'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
-    'Keluar': () => router.replace('/auth/login'),  // replace biar ga bisa back
+    'Keluar': () => router.replace('/auth/login'), 
   };
 
   const action = navigationMap[title];
