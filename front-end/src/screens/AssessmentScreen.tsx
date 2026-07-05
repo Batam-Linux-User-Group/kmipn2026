@@ -229,7 +229,6 @@ export default function AssessmentScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex: 1,
