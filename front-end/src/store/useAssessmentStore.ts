@@ -23,6 +23,14 @@ interface AssessmentState {
   // Self journal text (local only, no DB persistence yet)
   journalText: string;
 
+  // Trading plan fields
+  tradingPlan: {
+    entry: string;
+    price: string;
+    tpSl: string;
+    reason: string;
+  } | null;
+
   // Navigation history stack for "Kembali" button
   history: string[];
 
@@ -34,6 +42,7 @@ interface AssessmentState {
   goToNode: (nodeId: string) => void;
   goBack: () => boolean; // returns false if cannot go back
   setJournalText: (text: string) => void;
+  setTradingPlan: (plan: { entry: string; price: string; tpSl: string; reason: string } | null) => void;
   setPendingNextNodeId: (nodeId: string | null) => void;
   reset: () => void;
   getRiskStatus: () => { status: string; recommendation: string };
@@ -44,6 +53,7 @@ const initialState = {
   answers: {} as Record<string, AnswerRecord>,
   totalScore: 0,
   journalText: '',
+  tradingPlan: null as { entry: string; price: string; tpSl: string; reason: string } | null,
   history: [] as string[],
   pendingNextNodeId: null as string | null,
 };
@@ -88,6 +98,10 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
 
   setJournalText: (text: string) => {
     set({ journalText: text });
+  },
+
+  setTradingPlan: (plan) => {
+    set({ tradingPlan: plan });
   },
 
   setPendingNextNodeId: (nodeId: string | null) => {

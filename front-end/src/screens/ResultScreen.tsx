@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
+import { FontFamily } from '@/constants/fontsfamily';
 
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
@@ -164,20 +165,20 @@ const styles = StyleSheet.create({
   },
   logoLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A886A',
     marginTop: 4,
     letterSpacing: 1,
   },
   titleText: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#000000',
     marginTop: 12,
-    fontFamily: 'Laxend'
   },
   subtitleText: {
     fontSize: 12,
+    fontFamily: FontFamily.manropeMedium,
     color: '#000000',
     textAlign: 'center',
     marginTop: 4,
@@ -192,16 +193,17 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 32,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     textAlign: 'center',
     marginBottom: 12,
   },
   statusHighlight: {
     color: '#3BCFA6',
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   statusDescription: {
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
     color: '#000000',
     textAlign: 'center',
     lineHeight: 22,
@@ -214,19 +216,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
+    shadowColor: '#2BD5A2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 17,
+    elevation: 6,
   },
   recommendationLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#FFFFFF',
     opacity: 0.8,
     marginBottom: 8,
   },
   recommendationText: {
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
     color: '#FFFFFF',
     lineHeight: 22,
-    fontWeight: '500',
   },
 
   // Bottom Navigation
@@ -244,15 +251,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 17,
+    elevation: 5,
   },
   pillButtonText: {
     color: '#3BCFA6',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   dotIndicator: {
     width: 8,

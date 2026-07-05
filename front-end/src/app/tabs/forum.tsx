@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
@@ -16,6 +16,7 @@ import { Image } from "react-native";
 import { Avatar } from '@/components/avatar';
 import { Post, postsStore } from '@/constants/posts-data';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
 import { useTheme } from '@/hooks/use-theme';
 
 
@@ -31,6 +32,7 @@ function CheckmarkIcon() {
 
 export default function ForumScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>(() => postsStore.getPosts());
   const [selectedCategory, setSelectedCategory] = useState<'Semua Kategori' | 'Minta Saran' | 'Berbagi Cerita'>('Semua Kategori');
 
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginLeft: Spacing.two,
   },
   headerRight: {
@@ -262,7 +264,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 110, // Avoid bottom tab bar obstruction
+    paddingBottom: 180, // Perbesar dari 110 agar bisa scroll lebih ke bawah dan tidak terhalang navigation bar
   },
   shareCard: {
     flexDirection: 'row',
@@ -273,9 +275,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
     shadowColor: '#056B4E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 17,
+    elevation: 6,
   },
   shareCardLeft: {
     flexDirection: 'row',
@@ -287,13 +289,13 @@ const styles = StyleSheet.create({
   shareCardTitle: {
     color: '#A9EAD7',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     letterSpacing: 1,
   },
   shareCardSubtitle: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     marginTop: 2,
   },
   plusButton: {
@@ -316,7 +318,7 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   postCard: {
     backgroundColor: '#FFFFFF',
@@ -327,9 +329,9 @@ const styles = StyleSheet.create({
     borderColor: '#ECEFEF',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   postHeader: {
     flexDirection: 'row',
@@ -349,12 +351,12 @@ const styles = StyleSheet.create({
   },
   usernameText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A2520',
   },
   userRole: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginTop: 2,
   },
   tagPill: {
@@ -368,14 +370,14 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     letterSpacing: 0.5,
   },
   postContent: {
     fontSize: 15,
     color: '#283830',
     lineHeight: 22,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginVertical: 14,
   },
   divider: {
@@ -406,11 +408,12 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     color: '#7C8C85',
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
   },
   noPostsText: {
     textAlign: 'center',
     marginTop: 40,
     fontSize: 15,
+    fontFamily: FontFamily.manropeMedium,
   },
 });

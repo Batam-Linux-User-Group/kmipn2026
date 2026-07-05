@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Clock, Heart, Send } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -17,6 +17,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { Avatar } from '@/components/avatar';
 import { Post, postsStore } from '@/constants/posts-data';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
 import { useTheme } from '@/hooks/use-theme';
 
 function CheckmarkIcon() {
@@ -30,6 +31,7 @@ function CheckmarkIcon() {
 
 export default function ForumDetailScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [commentText, setCommentText] = useState('');
@@ -74,9 +76,9 @@ export default function ForumDetailScreen() {
   if (!post) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: theme.textSecondary }}>Postingan tidak ditemukan.</Text>
+        <Text style={{ color: theme.textSecondary, fontFamily: FontFamily.manropeMedium }}>Postingan tidak ditemukan.</Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: 12 }}>
-          <Text style={{ color: theme.mintDark, fontWeight: '700' }}>Kembali</Text>
+          <Text style={{ color: theme.mintDark, fontFamily: FontFamily.manropeBold }}>Kembali</Text>
         </Pressable>
       </View>
     );
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     textAlign: 'center',
   },
   keyboardView: {
@@ -256,6 +258,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
     borderWidth: 1,
     borderColor: '#ECEFEF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   userInfoRow: {
     flexDirection: 'row',
@@ -272,12 +279,12 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A2520',
   },
   userRole: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginTop: 2,
   },
   tagPill: {
@@ -289,14 +296,14 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     letterSpacing: 0.5,
   },
   postBodyText: {
     fontSize: 16,
     color: '#283830',
     lineHeight: 24,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginVertical: 18,
   },
   engagementRow: {
@@ -314,7 +321,7 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 13,
     color: '#7C8C85',
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
   },
   likesSection: {
     flexDirection: 'row',
@@ -324,12 +331,12 @@ const styles = StyleSheet.create({
   },
   likesText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#11221A',
   },
   commentsSectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginBottom: Spacing.three,
   },
   commentCard: {
@@ -338,10 +345,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: Spacing.three,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
   commentHeader: {
     flexDirection: 'row',
@@ -361,7 +368,7 @@ const styles = StyleSheet.create({
   },
   commentUsername: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A2520',
   },
   streakIndicator: {
@@ -374,7 +381,7 @@ const styles = StyleSheet.create({
   },
   streakCount: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#FF7B6E',
     marginLeft: 2,
   },
@@ -382,7 +389,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#283830',
     lineHeight: 20,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginTop: 8,
     marginBottom: 10,
   },
@@ -394,11 +401,11 @@ const styles = StyleSheet.create({
   commentTime: {
     fontSize: 12,
     color: '#7C8C85',
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
   },
   replyLink: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   commentLikes: {
     flexDirection: 'row',
@@ -407,12 +414,13 @@ const styles = StyleSheet.create({
   commentLikesText: {
     fontSize: 12,
     color: '#7C8C85',
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
   },
   noCommentsText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
   },
   inputBarContainer: {
     position: 'absolute',
@@ -429,9 +437,9 @@ const styles = StyleSheet.create({
     borderColor: '#ECEFEF',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 17,
+    elevation: 6,
   },
   textInput: {
     flex: 1,
@@ -439,7 +447,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
     color: '#283830',
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
   },
   sendButton: {
     width: 40,

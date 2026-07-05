@@ -1,19 +1,20 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   Pressable,
   ScrollView,
-  Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare, LogOut } from 'lucide-react-native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import { Image } from "react-native";
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
 
 
 // Custom high-fidelity profile avatar (green haired boy with sunglasses & hoodie)
@@ -64,6 +65,33 @@ function ProfileAvatar({ size = 100 }: { size?: number }) {
 }
 export default function ProfileScreen() {
   const theme = useTheme();
+  const router = useRouter();
+  
+  // Animated values for logout animation
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handleLogout = () => {
+    // Play fade-out + scale-down animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.92,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // After animation completes, navigate to login
+      router.replace('/auth/login');
+      // Reset animation values for next time
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+    });
+  };
 
  const handlePressSetting = (title: string) => {
   const navigationMap: { [key: string]: () => void } = {
@@ -71,7 +99,7 @@ export default function ProfileScreen() {
     'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
     'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
     'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
-    'Keluar': () => router.replace('/auth/login'), 
+    'Keluar': handleLogout,
   };
 
   const action = navigationMap[title];
@@ -83,7 +111,7 @@ export default function ProfileScreen() {
 };    
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* HEADER */}
         <View style={styles.header}>
@@ -176,8 +204,8 @@ export default function ProfileScreen() {
                 ]}
               >
                 <View style={styles.settingRowLeft}>
-                  <item.Icon size={20} color={theme.mintDark} style={{ marginRight: 12 }} />
-                  <Text style={styles.settingText}>{item.title}</Text>
+                  <item.Icon size={20} color={item.title === 'Keluar' ? '#EF4444' : theme.mintDark} style={{ marginRight: 12 }} />
+                  <Text style={[styles.settingText, item.title === 'Keluar' && { color: '#EF4444' }]}>{item.title}</Text>
                 </View>
                 <ChevronRight size={18} color="#B0C2B8" />
               </Pressable>
@@ -186,7 +214,7 @@ export default function ProfileScreen() {
 
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -211,7 +239,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginLeft: Spacing.two,
   },
   bellButton: {
@@ -220,7 +248,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
-    paddingBottom: 110, // Avoid overlapping with bottom tab bar
+    paddingBottom: 180, // Perbesar dari 110 agar bisa scroll lebih jauh ke bawah tanpa tertutup navigation bar
   },
   profileHeaderContainer: {
     alignItems: 'center',
@@ -231,12 +259,12 @@ const styles = StyleSheet.create({
   },
   usernameText: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     color: '#056B4E',
   },
   modeText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#7C8C85',
     marginTop: 2,
   },
@@ -256,18 +284,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 96,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   quickStatIcon: {
     marginBottom: 4,
   },
   quickStatValue: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     color: '#1E2A22',
   },
   quickStatLabel: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#7C8C85',
     textAlign: 'center',
     marginTop: 4,
@@ -280,10 +313,15 @@ const styles = StyleSheet.create({
     borderColor: '#ECEFEF',
     padding: 20,
     marginBottom: Spacing.four,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   communityTitle: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     color: '#7C8C85',
     letterSpacing: 1,
     marginBottom: 16,
@@ -306,12 +344,12 @@ const styles = StyleSheet.create({
   },
   communityStatValue: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     color: '#1E2A22',
   },
   communityStatLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#7C8C85',
     marginTop: 2,
   },
@@ -329,6 +367,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
   settingRowLeft: {
     flexDirection: 'row',
@@ -336,7 +379,7 @@ const styles = StyleSheet.create({
   },
   settingText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1E2A22',
   },
 });

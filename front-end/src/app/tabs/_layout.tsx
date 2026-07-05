@@ -5,6 +5,7 @@ import Svg, { Path, Circle } from "react-native-svg";
 import MaskedView from '@react-native-masked-view/masked-view';
 
 import { useTheme } from "@/hooks/use-theme";
+import { FontFamily } from "@/constants/fontsfamily";
 
 const TAB_BAR_HEIGHT = 75;
 const CIRCLE_RADIUS = 30;
@@ -176,14 +177,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 20,
     right: 20,
-    bottom: 36,
+    bottom: 1, 
     height: TAB_BAR_HEIGHT,
     borderRadius: 30,
     overflow: "visible",
     shadowColor: "#2D9E75",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 16,
+    shadowRadius: 17,
     elevation: 10,
   },
   tabButtonsWrapper: {
@@ -242,13 +243,14 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
+    fontFamily: FontFamily.manropeSemiBold,
   },
   activeLabelText: {
     color: "#424242",
-    fontWeight: "bold",
+    fontFamily: FontFamily.manropeBold,
   },
   inactiveLabelText: {
     color: "#424242",
-    fontWeight: "normal",
+    fontFamily: FontFamily.manropeMedium,
   },
 });

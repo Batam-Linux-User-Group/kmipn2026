@@ -10,12 +10,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, Image as ImageIcon, Smile } from 'lucide-react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
 import { Avatar } from '@/components/avatar';
 import { postsStore } from '@/constants/posts-data';
 
@@ -30,6 +31,7 @@ function CheckmarkIcon() {
 
 export default function ForumCreateScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [postText, setPostText] = useState('');
   const [category, setCategory] = useState<'Minta Saran' | 'Berbagi Cerita' | 'Atur Strategi'>('Atur Strategi');
 
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     textAlign: 'center',
   },
   keyboardView: {
@@ -191,12 +193,12 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A2520',
   },
   userRole: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginTop: 2,
   },
   inputCard: {
@@ -208,12 +210,17 @@ const styles = StyleSheet.create({
     height: 250,
     justifyContent: 'space-between',
     marginBottom: Spacing.five,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   textArea: {
     flex: 1,
     fontSize: 16,
     color: '#283830',
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     lineHeight: 24,
   },
   inputCardActions: {
@@ -227,7 +234,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginBottom: Spacing.three,
   },
   categoriesContainer: {
@@ -242,10 +249,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginRight: 8,
     marginBottom: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 17,
+    elevation: 2,
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   footerContainer: {
     position: 'absolute',
@@ -260,13 +272,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#2BD5A2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 17,
+    elevation: 6,
   },
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
 });

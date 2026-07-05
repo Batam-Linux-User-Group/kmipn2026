@@ -15,6 +15,8 @@ import { Image } from "react-native";
 
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
+import { useAssessmentStore } from '@/store/useAssessmentStore';
 
 
 
@@ -85,6 +87,8 @@ export default function ProgressScreen() {
   const theme = useTheme();
   const [selectedDay, setSelectedDay] = useState<number>(15);
   const screenWidth = Dimensions.get('window').width;
+
+  const { tradingPlan } = useAssessmentStore();
 
   const currentData = HISTORY_MAP[selectedDay] || HISTORY_MAP[15];
 
@@ -298,6 +302,33 @@ export default function ProgressScreen() {
             <Text style={styles.journalText}>"{currentData.hasilJournal}"</Text>
           </View>
 
+          {/* DYNAMIC TRADING PLAN CARD FROM STORE */}
+          {tradingPlan && (
+            <>
+              <Text style={[styles.sectionTitleHeader, { color: theme.mintDark, marginTop: Spacing.two }]}>
+                Hasil Trading Plan
+              </Text>
+              <View style={[styles.journalCard, { borderColor: '#3BCFA6' }]}>
+                <View style={styles.tradingPlanRow}>
+                  <Text style={styles.tradingPlanLabel}>Entry: </Text>
+                  <Text style={styles.tradingPlanVal}>{tradingPlan.entry}</Text>
+                </View>
+                <View style={styles.tradingPlanRow}>
+                  <Text style={styles.tradingPlanLabel}>Harga: </Text>
+                  <Text style={styles.tradingPlanVal}>{tradingPlan.price}</Text>
+                </View>
+                <View style={styles.tradingPlanRow}>
+                  <Text style={styles.tradingPlanLabel}>TP & SL: </Text>
+                  <Text style={styles.tradingPlanVal}>{tradingPlan.tpSl}</Text>
+                </View>
+                <View style={styles.tradingPlanRow}>
+                  <Text style={styles.tradingPlanLabel}>Alasan: </Text>
+                  <Text style={styles.tradingPlanVal}>{tradingPlan.reason}</Text>
+                </View>
+              </View>
+            </>
+          )}
+
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -325,7 +356,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginLeft: Spacing.two,
   },
   bellButton: {
@@ -334,11 +365,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 110, // Prevent overlapping with bottom tab bar
+    paddingBottom: 180, // Perbesar dari 110 agar bisa scroll lebih jauh ke bawah tanpa tertutup navigation bar
   },
   gaugeTitle: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#7C8C85',
     textAlign: 'center',
     marginTop: Spacing.one,
@@ -351,12 +382,12 @@ const styles = StyleSheet.create({
   },
   gaugeStatusText: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     marginTop: 10,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#7C8C85',
     textAlign: 'center',
     marginTop: Spacing.five,
@@ -371,6 +402,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ECEFEF',
     marginBottom: Spacing.five,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   xAxisRow: {
     flexDirection: 'row',
@@ -381,14 +417,14 @@ const styles = StyleSheet.create({
   },
   xAxisLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#B0C2B8',
     width: 20,
     textAlign: 'center',
   },
   sectionTitleHeader: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginBottom: Spacing.three,
   },
   datesRow: {
@@ -405,17 +441,17 @@ const styles = StyleSheet.create({
     marginRight: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
   dateNumber: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
   },
   dateLabelText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     marginTop: 2,
   },
   detailCard: {
@@ -425,16 +461,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ECEFEF',
     marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   detailLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#7C8C85',
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   journalCard: {
     backgroundColor: '#FFFFFF',
@@ -444,15 +485,32 @@ const styles = StyleSheet.create({
     borderColor: '#3BCFA6',
     marginBottom: 12,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   journalText: {
     fontSize: 14,
     fontStyle: 'italic',
+    fontFamily: FontFamily.manropeMedium,
     color: '#1A2520',
     lineHeight: 22,
+  },
+  tradingPlanRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  tradingPlanLabel: {
+    width: 75,
+    fontSize: 14,
+    fontFamily: FontFamily.manropeBold,
+    color: '#1A886A',
+  },
+  tradingPlanVal: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
+    color: '#1A2520',
   },
 });
