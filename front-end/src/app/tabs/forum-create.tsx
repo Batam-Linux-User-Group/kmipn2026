@@ -19,6 +19,7 @@ import { Avatar } from '@/components/avatar';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useForumStore } from '@/store/useForumStore';
+import { FontFamily } from '@/constants/fontsfamily';
 
 function CheckmarkIcon() {
   return (

@@ -1,4 +1,11 @@
 import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
+import {
   Lexend_400Regular,
   Lexend_500Medium,
   Lexend_600SemiBold,
@@ -17,6 +24,11 @@ export default function RootLayout() {
     Lexend_500Medium,
     Lexend_600SemiBold,
     Lexend_700Bold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
   });
 
   useEffect(() => {
@@ -36,6 +48,7 @@ export default function RootLayout() {
       <Stack.Screen name="auth/login"    options={{ animation: 'fade' }} />
       <Stack.Screen name="auth/callback" options={{ animation: 'none' }} />
       <Stack.Screen name="assessment"    options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="trading-plan"  options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="breathing"     options={{ animation: 'fade' }} />
       <Stack.Screen name="result"        options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="tabs"          options={{ animation: 'fade' }} />

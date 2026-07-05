@@ -38,6 +38,8 @@ func main() {
 	{
 		// ── User routes ──────────────────────────────────────────────
 		api.POST("/users/sync", handlers.SyncUser)
+		api.GET("/users/me", handlers.GetMe)
+		api.PATCH("/users/me", handlers.UpdateMe)
 
 		// ── Assessment routes ────────────────────────────────────────
 		api.GET("/assessments/today", handlers.GetTodayAssessment)

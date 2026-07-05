@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
+import { FontFamily } from '@/constants/fontsfamily';
 
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
@@ -129,19 +130,20 @@ const styles = StyleSheet.create({
   },
   logoLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A886A',
     marginTop: 4,
     letterSpacing: 1,
   },
   titleText: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A886A',
     marginTop: 12,
   },
   subtitleText: {
     fontSize: 13,
+    fontFamily: FontFamily.manropeMedium,
     color: '#1A886A',
     textAlign: 'center',
     marginTop: 6,
@@ -155,6 +157,7 @@ const styles = StyleSheet.create({
   },
   journalSectionSubtitle: {
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
     color: '#000000',
     opacity: 0.8,
     marginBottom: 16,
@@ -169,13 +172,14 @@ const styles = StyleSheet.create({
     padding: 16,
     color: '#1A886A',
     fontSize: 15,
+    fontFamily: FontFamily.manropeMedium,
     minHeight: 250,
     textAlignVertical: 'top',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
      logoContainer: {
     alignItems: 'center',
@@ -206,15 +210,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 17,
+    elevation: 5,
   },
   pillButtonText: {
     color: '#3BCFA6',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   dotIndicator: {
     width: 8,

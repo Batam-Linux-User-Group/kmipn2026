@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "re
 import { ArrowLeft, Shield, Mail, Lock, Eye, UserX, Trash2 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/hooks/use-theme";
+import { FontFamily } from "@/constants/fontsfamily";
 
 export default function AccountSettingsScreen() {
   const router = useRouter();
@@ -51,9 +52,9 @@ export default function AccountSettingsScreen() {
           onPress={() => router.back()} 
           style={styles.backButton}
         >
-          <ArrowLeft size={24} color={theme.textPrimary} />
+          <ArrowLeft size={24} color={theme.mintDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pengaturan Akun</Text>
+        <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Pengaturan Akun</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -70,8 +71,8 @@ export default function AccountSettingsScreen() {
             <Switch
               value={isAnonymous}
               onValueChange={setIsAnonymous}
-              trackColor={{ false: "#E0E0E0", true: theme.primaryLight }}
-              thumbColor={isAnonymous ? theme.primary : "#F4F4F4"}
+              trackColor={{ false: "#E0E0E0", true: "#A9EAD7" }}
+              thumbColor={isAnonymous ? "#2BD5A2" : "#F4F4F4"}
             />
           </View>
         </View>
@@ -90,8 +91,8 @@ export default function AccountSettingsScreen() {
                 onPress={item.onPress}
               >
                 <View style={styles.menuLeft}>
-                  <View style={[styles.iconContainer, { backgroundColor: theme.primaryLight }]}>
-                    <item.icon size={20} color={theme.primary} />
+                  <View style={[styles.iconContainer, { backgroundColor: '#D0F6EB' }]}>
+                    <item.icon size={20} color={theme.mintDark} />
                   </View>
                   <View style={styles.menuTextContainer}>
                     <Text style={styles.menuTitle}>{item.title}</Text>
@@ -115,8 +116,8 @@ export default function AccountSettingsScreen() {
                 onPress={item.onPress}
               >
                 <View style={styles.menuLeft}>
-                  <View style={[styles.iconContainer, { backgroundColor: theme.primaryLight }]}>
-                    <item.icon size={20} color={theme.primary} />
+                  <View style={[styles.iconContainer, { backgroundColor: '#D0F6EB' }]}>
+                    <item.icon size={20} color={theme.mintDark} />
                   </View>
                   <Text style={styles.menuTitle}>{item.title}</Text>
                 </View>
@@ -154,7 +155,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 50,
+    paddingTop: 56,
+    paddingBottom: 16,
     backgroundColor: "#F8F9FA",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
@@ -164,8 +166,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
+    fontFamily: FontFamily.manropeBold,
   },
   scrollView: {
     flex: 1,
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: FontFamily.manropeSemiBold,
     color: "#6B7280",
     marginBottom: 12,
     marginLeft: 4,
@@ -190,10 +191,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   anonymousContent: {
     flex: 1,
@@ -201,12 +202,13 @@ const styles = StyleSheet.create({
   },
   anonymousTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FontFamily.manropeSemiBold,
     color: "#1F2937",
     marginBottom: 4,
   },
   anonymousSubtitle: {
     fontSize: 13,
+    fontFamily: FontFamily.manropeRegular,
     color: "#6B7280",
     lineHeight: 18,
   },
@@ -215,10 +217,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   menuItem: {
     flexDirection: "row",
@@ -249,12 +251,13 @@ const styles = StyleSheet.create({
   },
   menuTitle: {
     fontSize: 15,
-    fontWeight: "500",
+    fontFamily: FontFamily.manropeMedium,
     color: "#1F2937",
     marginBottom: 2,
   },
   menuSubtitle: {
     fontSize: 13,
+    fontFamily: FontFamily.manropeRegular,
     color: "#9CA3AF",
   },
   chevron: {
@@ -271,19 +274,20 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   deleteButtonText: {
     fontSize: 15,
-    fontWeight: "500",
+    fontFamily: FontFamily.manropeMedium,
     color: "#EF4444",
   },
   versionText: {
     textAlign: "center",
     fontSize: 12,
+    fontFamily: FontFamily.manropeRegular,
     color: "#9CA3AF",
     marginTop: 24,
     marginBottom: 8,

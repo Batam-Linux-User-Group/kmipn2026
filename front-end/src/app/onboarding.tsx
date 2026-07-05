@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
-  Animated,
   Dimensions,
   FlatList,
   Pressable,
@@ -12,87 +12,54 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import onboardingData, { type OnboardingData } from "@/data/onboardingData";
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const SLIDES = [
-  {
-    id: "1",
-    titleBlack: "Berhenti Sejenak,",
-    titleMint: "Ambil JEDA",
-    titleMintInline: true,
-    description: "JEDA hadir sebagai ruang aman untuk membantumu pulih dari Adiksi Investasi Digital",
-  },
-  {
-    id: "2",
-    titleBlack: "Peluang Selalu",
-    titleMint: "Ada",
-    titleMintInline: false,
-    description: "Memilih untuk tidak over-trading dan mengamankan modalmu juga merupakan sebuah strategi.",
-  },
-  {
-    id: "3",
-    titleBlack: "Kendalikan",
-    titleMint: "Emosi mu",
-    titleMintInline: false,
-    description: "Saat panik muncul, tarik napas perlahan, redam adrenalin yang merugikan.",
-  },
-  {
-    id: "4",
-    titleBlack: "Pahami",
-    titleMint: "Pola Pikiran mu",
-    titleMintInline: false,
-    description: "Kenali emosi lewat catatan evaluasi singkat, sadari bias yang berulang dan jadilah orang yang lebih rasional.",
-  },
-  {
-    id: "5",
-    titleBlack: "Kuasai",
-    titleMint: "Keputusanmu",
-    titleMintInline: false,
-    description: "JEDA siap menemanimu mengambil kembali kendali atas emosi dan portofoliomu. Mari mulai melangkah.",
-  },
-];
-
+const SLIDES = onboardingData;
 const BLOB_POSITIONS = [
-  { cx: SCREEN_WIDTH * 0.78, cy: SCREEN_HEIGHT * 0.14, r: SCREEN_WIDTH * 0.60 },
-  { cx: SCREEN_WIDTH * 0.50, cy: SCREEN_HEIGHT * 0.10, r: SCREEN_WIDTH * 0.60 },
-  { cx: SCREEN_WIDTH * 0.22, cy: SCREEN_HEIGHT * 0.14, r: SCREEN_WIDTH * 0.60 },
-  { cx: SCREEN_WIDTH * 0.10, cy: SCREEN_HEIGHT * 0.24, r: SCREEN_WIDTH * 0.60 },
-  { cx: SCREEN_WIDTH * 0.50, cy: SCREEN_HEIGHT * 0.45, r: SCREEN_WIDTH * 1.8 },
+  { cx: SCREEN_WIDTH * 0.78, cy: SCREEN_HEIGHT * 0.14, r: SCREEN_WIDTH * 0.6 },
+  { cx: SCREEN_WIDTH * 0.5, cy: SCREEN_HEIGHT * 0.1, r: SCREEN_WIDTH * 0.6 },
+  { cx: SCREEN_WIDTH * 0.22, cy: SCREEN_HEIGHT * 0.14, r: SCREEN_WIDTH * 0.6 },
+  { cx: SCREEN_WIDTH * 0.1, cy: SCREEN_HEIGHT * 0.24, r: SCREEN_WIDTH * 0.6 },
+  { cx: SCREEN_WIDTH * 0.5, cy: SCREEN_HEIGHT * 0.45, r: SCREEN_WIDTH * 1.8 },
 ];
 
 const LAST_INDEX = SLIDES.length - 1;
-
-// ─── AnimatedBlob ──────────────────────────────────────────────────────────────
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface BlobProps {
   activeIndex: number;
 }
 
 function AnimatedBlob({ activeIndex }: BlobProps) {
-  const blobX = useRef(new Animated.Value(BLOB_POSITIONS[0].cx)).current;
-  const blobY = useRef(new Animated.Value(BLOB_POSITIONS[0].cy)).current;
-  const blobR = useRef(new Animated.Value(BLOB_POSITIONS[0].r)).current;
+  const blobX = useSharedValue(BLOB_POSITIONS[0].cx - SCREEN_WIDTH * 0.08);
+  const blobY = useSharedValue(BLOB_POSITIONS[0].cy - SCREEN_HEIGHT * 0.03);
+  const blobR = useSharedValue(BLOB_POSITIONS[0].r * 0.92);
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      cx: blobX.value,
+      cy: blobY.value,
+      r: blobR.value,
+    };
+  });
 
   useEffect(() => {
     const pos = BLOB_POSITIONS[activeIndex] ?? BLOB_POSITIONS[0];
-    const duration = activeIndex === LAST_INDEX ? 700 : undefined;
+    const duration = activeIndex === LAST_INDEX ? 700 : 480;
 
-    if (activeIndex === LAST_INDEX) {
-      Animated.parallel([
-        Animated.timing(blobX, { toValue: pos.cx, duration, useNativeDriver: false }),
-        Animated.timing(blobY, { toValue: pos.cy, duration, useNativeDriver: false }),
-        Animated.timing(blobR, { toValue: pos.r, duration, useNativeDriver: false }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.spring(blobX, { toValue: pos.cx, useNativeDriver: false }),
-        Animated.spring(blobY, { toValue: pos.cy, useNativeDriver: false }),
-        Animated.spring(blobR, { toValue: pos.r, useNativeDriver: false }),
-      ]).start();
-    }
-  }, [activeIndex]);
-
-  const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+    blobX.value = withSpring(pos.cx, { damping: 22, stiffness: 140 });
+    blobY.value = withSpring(pos.cy, { damping: 22, stiffness: 140 });
+    blobR.value = withTiming(pos.r, { duration, easing: Easing.out(Easing.exp) });
+  }, [activeIndex, blobR, blobX, blobY]);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -103,58 +70,62 @@ function AnimatedBlob({ activeIndex }: BlobProps) {
             <Stop offset="100%" stopColor="#3CC8A0" />
           </LinearGradient>
         </Defs>
-        <AnimatedCircle cx={blobX} cy={blobY} r={blobR} fill="url(#blobGrad)" />
+        <AnimatedCircle animatedProps={animatedProps} fill="url(#blobGrad)" />
       </Svg>
     </View>
   );
 }
 
-// ─── Slide ─────────────────────────────────────────────────────────────────────
-
 interface SlideProps {
-  item: (typeof SLIDES)[0];
+  item: OnboardingData;
   isActive: boolean;
   isLast: boolean;
-  onSkip?: () => void;
 }
 
-function Slide({ item, isActive, isLast, onSkip }: SlideProps) {
-  const translateY = useRef(new Animated.Value(50)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+function Slide({ item, isActive, isLast }: SlideProps) {
+  const translateY = useSharedValue(54);
+  const opacity = useSharedValue(0);
+  const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
     if (isActive) {
-      translateY.setValue(50);
-      opacity.setValue(0);
-      Animated.parallel([
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      ]).start();
+      translateY.value = 54;
+      opacity.value = 0;
+      lottieRef.current?.play();
+
+      translateY.value = withSpring(0, { damping: 20, stiffness: 180 });
+      opacity.value = withTiming(1, { duration: 360, easing: Easing.out(Easing.cubic) });
+    } else {
+      lottieRef.current?.pause();
     }
-  }, [isActive]);
+  }, [isActive, opacity, translateY]);
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const skipStyle = useAnimatedStyle(() => ({
+    opacity: isLast ? 0 : opacity.value,
+  }));
 
   return (
     <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
-      {/* keep button space stable so it doesn't cause any subtle shift */}
       <View style={[styles.skipInsideBlob, styles.skipInsideBlobFrame]}>
         <Pressable
           style={{ width: 72, height: 28, alignItems: "center", justifyContent: "center" }}
-          onPress={onSkip}
           disabled={isLast}
         >
-          <Animated.Text style={[styles.skipTextBlob, { opacity: isLast ? 0 : opacity }]}>
-            Lewati
-          </Animated.Text>
         </Pressable>
       </View>
 
       <Animated.View
-        style={[
-          styles.textContainer,
-          isLast && styles.textContainerLast,
-          { transform: [{ translateY }], opacity },
-        ]}
+        style={[styles.textContainer, isLast && styles.textContainerLast, textStyle]}
       >
+        <View style={styles.animationWrap}>
+          <LottieView source={item.animation} autoPlay loop style={styles.animation} />
+        </View>
+
         {item.titleMintInline ? (
           <Animated.Text style={[styles.titleBlack, isLast && styles.titleBlackOnMint]}>
             {item.titleBlack}{" "}
@@ -180,28 +151,48 @@ function Slide({ item, isActive, isLast, onSkip }: SlideProps) {
   );
 }
 
-// ─── Dots ──────────────────────────────────────────────────────────────────────
-
 function Dots({ count, active, onMint }: { count: number; active: number; onMint?: boolean }) {
+  const indicatorX = useSharedValue(0);
+
+  useEffect(() => {
+    // Setiap dot + spacing = 14px (8px dot + 6px gap)
+    indicatorX.value = withSpring(active * 14, { damping: 22, stiffness: 210 });
+  }, [active]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: indicatorX.value }],
+  }));
+
   return (
     <View style={styles.dotsRow}>
+      {/* Indicator animasi */}
+      <Animated.View
+        style={[
+          styles.dotIndicator,
+          onMint ? styles.dotActiveOnMint : styles.dotActive,
+          indicatorStyle,
+        ]}
+      />
+      
+      {/* Dots statis */}
       {Array.from({ length: count }).map((_, i) => (
         <View
           key={i}
           style={[
             styles.dot,
             i === active
-              ? onMint ? styles.dotActiveOnMint : styles.dotActive
-              : onMint ? styles.dotInactiveOnMint : styles.dotInactive,
+              ? onMint
+                ? styles.dotActiveOnMint
+                : styles.dotActive
+              : onMint
+              ? styles.dotInactiveOnMint
+              : styles.dotInactive,
           ]}
         />
       ))}
     </View>
   );
 }
-
-// ─── NavButton ─────────────────────────────────────────────────────────────────
-
 function NavButton({
   direction,
   onPress,
@@ -213,29 +204,40 @@ function NavButton({
   disabled?: boolean;
   onMint?: boolean;
 }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 0.88, duration: 80, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
-    ]).start();
-    onPress();
+  const handlePressIn = () => {
+    scale.value = withTiming(0.94, { duration: 120 });
   };
+
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: 120 });
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   const disabledColor = onMint ? "rgba(255,255,255,0.4)" : "#B0C8C2";
   const activeColor = "#FFFFFF";
   const btnBg = onMint
-    ? disabled ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.25)"
-    : disabled ? "#E5E7EB" : "#3CC8A0";
+    ? disabled
+      ? "rgba(255,255,255,0.2)"
+      : "rgba(255,255,255,0.25)"
+    : disabled
+    ? "#E5E7EB"
+    : "#3CC8A0";
 
   return (
-    <Pressable onPress={handlePress} disabled={disabled}>
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+    >
       <Animated.View
         style={[
           styles.navBtn,
           { backgroundColor: btnBg, shadowOpacity: disabled ? 0 : 0.3 },
-          { transform: [{ scale }] },
+          animatedStyle,
         ]}
       >
         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -262,29 +264,27 @@ function NavButton({
   );
 }
 
-// ─── StartButton ───────────────────────────────────────────────────────────────
-
 function StartButton({ onPress }: { onPress: () => void }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 0.97, duration: 80, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
-    ]).start();
-    onPress();
+  const handlePressIn = () => {
+    scale.value = withTiming(0.96, { duration: 120 });
   };
 
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: 120 });
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
   return (
-    <Pressable onPress={handlePress}>
-      <Animated.View style={[styles.startBtn, { transform: [{ scale }] }]}>
+    <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View style={[styles.startBtn, animatedStyle]}>
         <Text style={styles.startBtnText}>Start</Text>
       </Animated.View>
     </Pressable>
   );
 }
-
-// ─── OnboardingScreen ──────────────────────────────────────────────────────────
 
 interface OnboardingScreenProps {
   onFinish?: () => void;
@@ -292,35 +292,36 @@ interface OnboardingScreenProps {
 
 export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<OnboardingData>>(null);
+  const activeIndexRef = useRef(0);
   const isLast = activeIndex === LAST_INDEX;
-  const router = useRouter(); 
+  const router = useRouter();
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   const goTo = (index: number) => {
     if (index < 0 || index >= SLIDES.length) return;
-    flatListRef.current?.scrollToIndex({ index, animated: true });
+    activeIndexRef.current = index;
     setActiveIndex(index);
+    flatListRef.current?.scrollToIndex({ index, animated: true });
   };
 
-   const skipToLast = () => {
-    flatListRef.current?.scrollToIndex({ index: LAST_INDEX, animated: true });
-    setActiveIndex(LAST_INDEX);
-  };
-
-   const handleFinish = () => {
+  const handleFinish = () => {
     router.replace("/auth/login");
   };
 
+  const onViewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const nextIndex = viewableItems[0]?.index;
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setActiveIndex(viewableItems[0].index);
-      }
+    if (typeof nextIndex === "number" && nextIndex !== activeIndexRef.current) {
+      activeIndexRef.current = nextIndex;
+      setActiveIndex(nextIndex);
     }
-  ).current;
+  };
 
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+  const viewabilityConfig = { viewAreaCoveragePercentThreshold: 50 };
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -329,7 +330,7 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
       <FlatList
         ref={flatListRef}
         data={SLIDES}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -341,7 +342,6 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
             item={item}
             isActive={activeIndex === index}
             isLast={index === LAST_INDEX}
-            onSkip={skipToLast}
           />
         )}
         style={styles.flatList}
@@ -357,14 +357,16 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
           />
         </View>
 
-        <Dots count={SLIDES.length} active={activeIndex} onMint={isLast} />
+        <View style={styles.dotsWrapper}>
+          <Dots count={SLIDES.length} active={activeIndex} onMint={isLast} />
+        </View>
 
         <View style={[styles.navBtnContainer, styles.navBtnContainerRightFixed]}>
           <View style={styles.navBtnRightInner}>
             {!isLast ? (
               <NavButton direction="next" onPress={() => goTo(activeIndex + 1)} />
             ) : (
-            <StartButton onPress={handleFinish} /> 
+              <StartButton onPress={handleFinish} />
             )}
           </View>
         </View>
@@ -372,8 +374,6 @@ export default function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
     </SafeAreaView>
   );
 }
-
-// ─── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: "absolute",
-    bottom: 60,
+    bottom: 40,
     left: 0,
     right: 0,
     paddingHorizontal: 32,
@@ -396,6 +396,17 @@ const styles = StyleSheet.create({
   },
   textContainerLast: {
     bottom: 80,
+  },
+  animationWrap: {
+    width: 250,
+    height: 250,
+    marginBottom: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  animation: {
+    width: "180%",
+    height: "190%",
   },
   titleBlack: {
     fontSize: 37,
@@ -435,14 +446,15 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontFamily: "laxend_Medium",
   },
-
   bottomNav: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 32,
-    paddingBottom: 16,
-    paddingTop: 16,
+    paddingHorizontal: 24,
+  },
+  dotsWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   navBtnContainer: {
     width: 48,
@@ -458,17 +470,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  dotsRow: {
+   dotsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-  },
-  dot: {
-    borderRadius: 4,
+    justifyContent: "center",
+    position: "relative",
     height: 8,
   },
-  dotActive: {
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 3,
+  },
+  dotIndicator: {
+    position: "absolute",
     width: 20,
+    height: 8,
+    borderRadius: 4,
+    left: 0,
+    marginLeft: 3,
+  },
+  dotActive: {
+    width: 8,
     backgroundColor: "#3CC8A0",
   },
   dotInactive: {
@@ -476,7 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#D1D5DB",
   },
   dotActiveOnMint: {
-    width: 20,
+    width: 8,
     backgroundColor: "#FFFFFF",
   },
   dotInactiveOnMint: {
@@ -499,8 +523,6 @@ const styles = StyleSheet.create({
     width: 79,
     height: 50,
     borderRadius: 20,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
@@ -516,12 +538,11 @@ const styles = StyleSheet.create({
     color: "#3CC8A0",
     letterSpacing: 0.5,
   },
-
   skipInsideBlob: {
     position: "absolute",
     top: 16,
     right: 24,
-    zIndex: 999,
+    zIndex: 20,
   },
   skipInsideBlobFrame: {
     width: 72,
@@ -532,6 +553,6 @@ const styles = StyleSheet.create({
   skipTextBlob: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#0000",
+    color: "#000000",
   },
 });

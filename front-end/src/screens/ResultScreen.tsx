@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
+import { FontFamily } from '@/constants/fontsfamily';
 
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
@@ -187,19 +188,20 @@ const styles = StyleSheet.create({
   },
   logoLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#1A886A',
     marginTop: 4,
     letterSpacing: 1,
   },
   titleText: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#000000',
     marginTop: 12,
   },
   subtitleText: {
     fontSize: 12,
+    fontFamily: FontFamily.manropeMedium,
     color: '#000000',
     textAlign: 'center',
     marginTop: 4,
@@ -214,16 +216,17 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 32,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     textAlign: 'center',
     marginBottom: 12,
   },
   statusHighlight: {
     color: '#3BCFA6',
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   statusDescription: {
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
     color: '#000000',
     textAlign: 'center',
     lineHeight: 22,
@@ -235,20 +238,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#3BCFA6',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   recommendationLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#FFFFFF',
     opacity: 0.8,
     marginBottom: 8,
   },
   recommendationText: {
     fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
     color: '#FFFFFF',
     lineHeight: 22,
-    fontWeight: '500',
   },
 
   // Score
@@ -287,13 +290,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
-    minWidth: 100,
-    alignItems: 'center',
   },
   pillButtonText: {
     color: '#3BCFA6',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
   },
   dotIndicator: {
     width: 8,

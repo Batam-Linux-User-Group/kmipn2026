@@ -22,6 +22,14 @@ interface AssessmentState {
   // Self journal text
   journalText: string;
 
+  // Trading plan fields
+  tradingPlan: {
+    entry: string;
+    price: string;
+    tpSl: string;
+    reason: string;
+  } | null;
+
   // Navigation history stack for "Kembali" button
   history: string[];
 
@@ -37,6 +45,7 @@ interface AssessmentState {
   goToNode: (nodeId: string) => void;
   goBack: () => boolean;
   setJournalText: (text: string) => void;
+  setTradingPlan: (plan: { entry: string; price: string; tpSl: string; reason: string } | null) => void;
   setPendingNextNodeId: (nodeId: string | null) => void;
   setMainInstrument: (instrument: string) => void;
   reset: () => void;
@@ -48,6 +57,7 @@ const initialState = {
   answers: {} as Record<string, AnswerRecord>,
   totalScore: 0,
   journalText: '',
+  tradingPlan: null as { entry: string; price: string; tpSl: string; reason: string } | null,
   history: [] as string[],
   pendingNextNodeId: null as string | null,
   triggerCount: 0,
@@ -99,6 +109,10 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
 
   setJournalText: (text: string) => {
     set({ journalText: text });
+  },
+
+  setTradingPlan: (plan) => {
+    set({ tradingPlan: plan });
   },
 
   setPendingNextNodeId: (nodeId: string | null) => {

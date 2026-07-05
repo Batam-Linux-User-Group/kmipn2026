@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -15,8 +15,8 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
 import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
 import { useTheme } from '@/hooks/use-theme';
-import { ForumCategory, ForumPost } from '@/services/api';
 import { useForumStore } from '@/store/useForumStore';
 
 function CheckmarkIcon() {
@@ -42,11 +42,12 @@ function formatTime(dateStr: string): string {
   }
 }
 
-// Kategori fixed di UI + "Semua" — mapping ke category.name dari API
 const ALL_LABEL = 'Semua Kategori';
 
 export default function ForumScreen() {
   const theme = useTheme();
+  const router = useRouter();
+
   const {
     posts,
     categories,

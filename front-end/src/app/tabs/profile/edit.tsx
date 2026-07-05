@@ -1,158 +1,139 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
+  StyleSheet,
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
-  StyleSheet,
-  Image,
-  StatusBar,
-} from "react-native";
-import {
-  ArrowLeft,
-  Bell,
-  User,
-  AtSign,
-  Mail,
-  Lock,
-  Camera,
-  Save,
-} from "lucide-react-native";
-import { useRouter } from "expo-router";
-import { useTheme } from "@/hooks/use-theme";
+  TextInput,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Camera } from 'lucide-react-native';
+import Svg, { Circle, G, Path } from 'react-native-svg';
+import { useRouter } from 'expo-router';
+import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
+
+// Reuse the profile avatar from profile/index
+function ProfileAvatar({ size = 100 }: { size?: number }) {
+  const scale = size / 100;
+  return (
+    <View style={{ marginBottom: 8 }}>
+      <Svg width={size} height={size} viewBox="0 0 100 100">
+        <Circle cx={50} cy={50} r={48} stroke="#FF8E85" strokeWidth={2.5} fill="#FFFFFF" />
+        <Circle cx={50} cy={50} r={44} fill="#FFEBE9" />
+        <G scale={scale * 0.9} translate={[5, 5]}>
+          <Path d="M44 65h12v12H44z" fill="#FAD7A0" />
+          <Path d="M28 55c0-14 10-23 22-23s22 9 22 23c0 9-4 11-4 14H32c0-3-4-5-4-14z" fill="#E53935" />
+          <Circle cx={50} cy={42} r={20} fill="#00796B" />
+          <Circle cx={50} cy={47} r={15} fill="#FAD7A0" />
+          <Path d="M38 45h9v5h-9zM53 45h9v5h-9z" fill="#212F3D" />
+          <Path d="M46 47h8" stroke="#212F3D" strokeWidth={1.5} />
+          <Path d="M35 36l6-8 3 9 4-11 5 10 5-9 3 7" stroke="#00796B" strokeWidth={3} strokeLinecap="round" fill="none" />
+          <Path d="M38 32l5-7 3 8" fill="#00796B" />
+          <Path d="M46 28l4-10 4 10" fill="#00796B" />
+          <Path d="M54 32l4-7 3 7" fill="#00796B" />
+          <Path d="M22 85c3-11 11-15 28-15s25 4 28 15H22z" fill="#E53935" />
+          <Path d="M32 70l18 10 18-10" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" fill="none" />
+          <Path d="M45 70a5 5 0 0010 0" fill="#212F3D" />
+        </G>
+      </Svg>
+    </View>
+  );
+}
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const [fullName, setFullName] = useState("Siti Aminah");
-  const [username, setUsername] = useState("aminah_serene");
-  const [bio, setBio] = useState(
-    "I am passionate about mindfulness and supporting others on their wellness journey. Let's grow together in this serene space. 🌿"
-  );
 
-  const bioLimit = 200;
+  const [username, setUsername] = useState('TheLittleRabbit90');
+  const [bio, setBio] = useState('Investor pemula yang sedang belajar mengelola emosi.');
+  const [email] = useState('fawwaz.k***@gmail.com');
+
+  const handleSave = () => {
+    // TODO: Save to backend
+    router.back();
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profil</Text>
-        <TouchableOpacity style={styles.headerIcon}>
-          <Bell size={22} color="#1F2937" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Profile Photo */}
-        <View style={styles.photoSection}>
-          <View style={styles.photoContainer}>
-            <Image
-              source={{
-                uri: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face",
-              }}
-              style={styles.profilePhoto}
-            />
-            <TouchableOpacity style={styles.cameraButton}>
-              <Camera size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.changePhotoText}>UBAH FOTO PROFIL</Text>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <ArrowLeft size={24} color={theme.mintDark} />
+          </Pressable>
+          <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Edit Profil</Text>
+          <View style={{ width: 32 }} />
         </View>
 
-        {/* Form Fields */}
-        <View style={styles.formSection}>
-          {/* Nama Lengkap */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nama Lengkap</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Nama lengkap"
-              />
-              <User size={20} color="#9CA3AF" />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Avatar Section */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarContainer}>
+              <ProfileAvatar size={110} />
+              <Pressable
+                style={[styles.cameraButton, { backgroundColor: theme.mintMedium }]}
+              >
+                <Camera size={18} color="#FFFFFF" />
+              </Pressable>
             </View>
+            <Text style={styles.changePhotoText}>Ubah Foto Profil</Text>
           </View>
 
-          {/* Username */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Username</Text>
+          {/* Form Fields */}
+          <View style={styles.formSection}>
+            <Text style={styles.fieldLabel}>Username</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.textInput}
                 value={username}
                 onChangeText={setUsername}
-                placeholder="Username"
+                placeholder="Masukkan username"
+                placeholderTextColor="#A0A5A8"
               />
-              <AtSign size={20} color="#9CA3AF" />
             </View>
-            <Text style={styles.inputHint}>
-              Username ini akan terlihat oleh anggota komunitas lainnya.
-            </Text>
-          </View>
 
-          {/* Bio */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Bio</Text>
-            <View style={styles.textAreaWrapper}>
+            <Text style={styles.fieldLabel}>Bio / Status</Text>
+            <View style={[styles.inputWrapper, { height: 100 }]}>
               <TextInput
-                style={styles.textArea}
+                style={[styles.textInput, { height: 90, textAlignVertical: 'top' }]}
                 value={bio}
                 onChangeText={setBio}
-                placeholder="Ceritakan tentang dirimu..."
+                placeholder="Tulis bio singkat..."
+                placeholderTextColor="#A0A5A8"
                 multiline
-                maxLength={bioLimit}
-                textAlignVertical="top"
               />
             </View>
-            <Text style={styles.charCounter}>
-              {bio.length}/{bioLimit}
-            </Text>
-          </View>
-        </View>
 
-        {/* Account Settings Section */}
-        <View style={styles.accountSection}>
-          <Text style={styles.accountSectionTitle}>Pengaturan Akun</Text>
-          <View style={styles.accountCard}>
-            <TouchableOpacity style={styles.accountMenuItem}>
-              <View style={styles.accountMenuLeft}>
-                <Mail size={20} color="#6B7280" />
-                <Text style={styles.accountMenuText}>Email</Text>
-              </View>
-              <Text style={styles.accountMenuValue}>siti@email.com</Text>
-            </TouchableOpacity>
-            <View style={styles.divider} />
-            <TouchableOpacity style={styles.accountMenuItem}>
-              <View style={styles.accountMenuLeft}>
-                <Lock size={20} color="#6B7280" />
-                <Text style={styles.accountMenuText}>Ubah Kata Sandi</Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: '#F5F7F6' }]}>
+              <TextInput
+                style={[styles.textInput, { color: '#9CA3AF' }]}
+                value={email}
+                editable={false}
+              />
+            </View>
+            <Text style={styles.fieldHint}>Email tidak dapat diubah di sini. Buka Pengaturan Akun.</Text>
           </View>
-        </View>
 
-        {/* Buttons */}
-        <View style={styles.buttonSection}>
-          <TouchableOpacity style={styles.saveButton}>
-            <Save size={20} color="#fff" />
+          {/* Save Button */}
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.saveButton,
+              { backgroundColor: theme.mintMedium },
+              pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+            ]}
+          >
             <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Batalakan</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -160,185 +141,116 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 50,
-    backgroundColor: "#F5F5F5",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
   },
   backButton: {
     padding: 4,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
+    fontFamily: FontFamily.manropeBold,
   },
-  headerIcon: {
-    padding: 4,
+  scrollContent: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: 40,
   },
-  scrollView: {
-    flex: 1,
+
+  // Avatar
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.five,
   },
-  photoSection: {
-    alignItems: "center",
-    paddingVertical: 24,
-  },
-  photoContainer: {
-    position: "relative",
-  },
-  profilePhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatarContainer: {
+    position: 'relative',
   },
   cameraButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#2D9E75",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
+    position: 'absolute',
+    bottom: 8,
+    right: -4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   changePhotoText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#6B7280",
-    marginTop: 12,
-    letterSpacing: 0.5,
-  },
-  formSection: {
-    paddingHorizontal: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
+    fontFamily: FontFamily.manropeSemiBold,
+    color: '#2BD5A2',
+    marginTop: 4,
+  },
+
+  // Form
+  formSection: {
+    marginBottom: Spacing.five,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontFamily: FontFamily.manropeSemiBold,
+    color: '#7C8C85',
     marginBottom: 8,
+    marginLeft: 4,
   },
   inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: '#ECEFEF',
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
   textInput: {
-    flex: 1,
     fontSize: 15,
-    color: "#1F2937",
+    fontFamily: FontFamily.manropeMedium,
+    color: '#1E2A22',
+    paddingVertical: 14,
   },
-  inputHint: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 6,
+  fieldHint: {
+    fontSize: 11,
+    fontFamily: FontFamily.manropeRegular,
+    color: '#9CA3AF',
+    marginTop: -12,
+    marginBottom: 16,
+    marginLeft: 4,
   },
-  textAreaWrapper: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 16,
-    minHeight: 120,
-  },
-  textArea: {
-    fontSize: 15,
-    color: "#1F2937",
-    lineHeight: 22,
-  },
-  charCounter: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    textAlign: "right",
-    marginTop: 6,
-  },
-  accountSection: {
-    paddingHorizontal: 20,
-    marginTop: 8,
-  },
-  accountSectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2D9E75",
-    marginBottom: 12,
-  },
-  accountCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  accountMenuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-  },
-  accountMenuLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  accountMenuText: {
-    fontSize: 15,
-    color: "#374151",
-  },
-  accountMenuValue: {
-    fontSize: 14,
-    color: "#9CA3AF",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#F3F4F6",
-    marginHorizontal: 16,
-  },
-  chevron: {
-    fontSize: 22,
-    color: "#9CA3AF",
-  },
-  buttonSection: {
-    paddingHorizontal: 20,
-    marginTop: 24,
-    alignItems: "center",
-    gap: 16,
-  },
+
+  // Save Button
   saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2D9E75",
-    borderRadius: 14,
-    paddingVertical: 16,
-    width: "100%",
-    gap: 8,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2BD5A2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 17,
+    elevation: 6,
   },
   saveButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  cancelButtonText: {
-    fontSize: 15,
-    color: "#2D9E75",
-    fontWeight: "500",
+    fontFamily: FontFamily.manropeBold,
   },
 });
