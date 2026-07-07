@@ -148,7 +148,13 @@ export const usersApi = {
 
   /** Get current authenticated user profile + streak. */
   getMe: () =>
-    apiFetch<{ user: User; streak: UserStreak }>('/api/users/me'),
+    apiFetch<{
+      user: User;
+      streak: UserStreak;
+      posts_count: number;
+      comments_count: number;
+      likes_count: number;
+    }>('/api/users/me'),
 
   /** Update current user profile (partial update). */
   updateMe: (payload: {
@@ -190,6 +196,13 @@ export const assessmentsApi = {
   /** Get assessment history (last N days, default 7). */
   getHistory: (days = 7) =>
     apiFetch<AssessmentHistoryResponse>(`/api/assessments/history?days=${days}`),
+
+  /** Update today's journal text, or create a blank assessment with journal. */
+  updateJournal: (journalText: string) =>
+    apiFetch<{ message: string; journal_text: string }>('/api/assessments/today/journal', {
+      method: 'PATCH',
+      body: JSON.stringify({ journal_text: journalText }),
+    }),
 };
 
 // --------------------------------------------------------------------------

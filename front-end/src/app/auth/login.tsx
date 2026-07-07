@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase } from "@/services/supabase";
-import { usersApi } from "@/services/api";
+import { usersApi, assessmentsApi } from "@/services/api";
 
 function JEDALogo() {
   return (
@@ -55,16 +55,13 @@ export default function LoginScreen() {
       }
 
       if (data?.session) {
-        try {
-          const { user } = data.session;
-          await usersApi.sync({
-            email: user.email ?? "",
-            display_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User JEDA",
-            avatar_url: user.user_metadata?.avatar_url || "",
-          });
-        } catch (syncErr) {
-          console.error("[Login] Sync backend error:", syncErr);
+        const historyRes = await assessmentsApi.getHistory(1);
+        if (historyRes.history && historyRes.history.length === 0) {
+          router.replace('/assessment');
+        } else {
+          router.replace('/tabs');
         }
+        return;
       }
 
       router.replace('/tabs');

@@ -9,6 +9,7 @@ import {
   Text,
   View,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +31,7 @@ function JEDALogo() {
 export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +39,7 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
 
   const handleRegister = async () => {
-    if (!email || !username || !password || !confirmPassword) {
+    if (!email || !displayName || !username || !password || !confirmPassword) {
       setError("Semua kolom harus diisi");
       return;
     }
@@ -62,7 +64,7 @@ export default function RegisterScreen() {
         options: {
           data: {
             username: username,
-            full_name: username,
+            full_name: displayName,
           },
         },
       });
@@ -78,7 +80,7 @@ export default function RegisterScreen() {
           const { user } = data.session;
           await usersApi.sync({
             email: user.email ?? "",
-            display_name: user.user_metadata?.full_name || username || "User JEDA",
+            display_name: user.user_metadata?.full_name || displayName || "User JEDA",
             username: user.user_metadata?.username || username,
             avatar_url: user.user_metadata?.avatar_url || "",
           });
@@ -101,111 +103,129 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#A8DDD0" />
 
-      {/* Logo Section */}
-      <View style={styles.logoSection}>
-        <JEDALogo />
-      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <JEDALogo />
+        </View>
 
-      {/* Text Section */}
-      <View style={styles.textSection}>
-        <Text style={styles.welcomeTitle}>Daftar Akun{"\n"}JEDA</Text>
-        <Text style={styles.subtitle}>
-          Buat akun baru untuk memulai perjalanan finansial sehat Anda
-        </Text>
-      </View>
-
-      {/* Form Section */}
-      <View style={styles.formSection}>
-        
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#7C8C85"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setError("");
-          }}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          editable={!isLoading}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          placeholderTextColor="#7C8C85"
-          value={username}
-          onChangeText={(text) => {
-            setUsername(text);
-            setError("");
-          }}
-          autoCapitalize="none"
-          editable={!isLoading}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#7C8C85"
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            setError("");
-          }}
-          secureTextEntry
-          autoCapitalize="none"
-          editable={!isLoading}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Konfirmasi Password"
-          placeholderTextColor="#7C8C85"
-          value={confirmPassword}
-          onChangeText={(text) => {
-            setConfirmPassword(text);
-            setError("");
-          }}
-          secureTextEntry
-          autoCapitalize="none"
-          editable={!isLoading}
-        />
-
-        {error ? (
-          <Text style={[styles.errorText, error.includes("berhasil") && { color: "#16A34A" }]}>
-            {error}
+        {/* Text Section */}
+        <View style={styles.textSection}>
+          <Text style={styles.welcomeTitle}>Daftar Akun{"\n"}JEDA</Text>
+          <Text style={styles.subtitle}>
+            Buat akun baru untuk memulai perjalanan finansial sehat Anda
           </Text>
-        ) : null}
-      </View>
+        </View>
 
-      {/* Button Section */}
-      <View style={styles.buttonSection}>
-        <Pressable
-          onPress={handleRegister}
-          disabled={isLoading}
-          style={({ pressed }) => [
-            styles.registerButton,
-            pressed && !isLoading && styles.registerButtonPressed,
-            isLoading && styles.registerButtonDisabled,
-          ]}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <Text style={styles.registerButtonText}>Daftar</Text>
-          )}
-        </Pressable>
+        {/* Form Section */}
+        <View style={styles.formSection}>
+          <TextInput
+            style={styles.input}
+            placeholder="Nama Tampilan (Display Name)"
+            placeholderTextColor="#7C8C85"
+            value={displayName}
+            onChangeText={(text) => {
+              setDisplayName(text);
+              setError("");
+            }}
+            editable={!isLoading}
+          />
 
-        <Pressable
-          onPress={() => router.push('/auth/login')}
-          disabled={isLoading}
-          style={styles.loginLink}
-        >
-          <Text style={styles.loginLinkText}>
-            Sudah punya akun? <Text style={styles.loginLinkHighlight}>Masuk</Text>
-          </Text>
-        </Pressable>
-      </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor="#7C8C85"
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              setError("");
+            }}
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#7C8C85"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError("");
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!isLoading}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#7C8C85"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError("");
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Konfirmasi Password"
+            placeholderTextColor="#7C8C85"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setError("");
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+
+          {error ? (
+            <Text style={[styles.errorText, error.includes("berhasil") && { color: "#16A34A" }]}>
+              {error}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* Button Section */}
+        <View style={styles.buttonSection}>
+          <Pressable
+            onPress={handleRegister}
+            disabled={isLoading}
+            style={({ pressed }) => [
+              styles.registerButton,
+              pressed && !isLoading && styles.registerButtonPressed,
+              isLoading && styles.registerButtonDisabled,
+            ]}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.registerButtonText}>Daftar</Text>
+            )}
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push('/auth/login')}
+            disabled={isLoading}
+            style={styles.loginLink}
+          >
+            <Text style={styles.loginLinkText}>
+              Sudah punya akun? <Text style={styles.loginLinkHighlight}>Masuk</Text>
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -214,8 +234,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#A8DDD0",
+  },
+  scrollView: {
+    flex: 1,
+    width: "100%",
+  },
+  scrollContainer: {
     alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 32,
   },
   logoSection: {
     marginBottom: 8,

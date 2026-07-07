@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
+    marginBottom: 30
   },
   submitButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
 });

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"jeda-api/config"
 	"jeda-api/models"
@@ -65,6 +66,20 @@ func SyncUser(c *gin.Context) {
 		Username:    req.Username,
 		AvatarURL:   req.AvatarURL,
 		Role:        req.Role,
+	}
+
+	// Prevent empty username overwrite
+	if user.Username == "" {
+		var existingUser models.User
+		if err := config.DB.Select("username").Where("id = ?", userID).First(&existingUser).Error; err == nil && existingUser.Username != "" {
+			user.Username = existingUser.Username
+		} else {
+			// Fallback to email prefix
+			parts := strings.Split(req.Email, "@")
+			if len(parts) > 0 {
+				user.Username = parts[0]
+			}
+		}
 	}
 
 	// Set boolean fields if provided
@@ -143,9 +158,22 @@ func GetMe(c *gin.Context) {
 	var streak models.UserStreak
 	config.DB.Where("user_id = ?", userID).First(&streak)
 
+	// Fetch community counts
+	var postsCount int64
+	config.DB.Model(&models.ForumPost{}).Where("user_id = ?", userID).Count(&postsCount)
+
+	var commentsCount int64
+	config.DB.Model(&models.ForumComment{}).Where("user_id = ?", userID).Count(&commentsCount)
+
+	var totalLikes int64
+	config.DB.Model(&models.ForumPost{}).Where("user_id = ?", userID).Select("COALESCE(SUM(likes_count), 0)").Row().Scan(&totalLikes)
+
 	c.JSON(http.StatusOK, gin.H{
-		"user":   user,
-		"streak": streak,
+		"user":           user,
+		"streak":         streak,
+		"posts_count":    postsCount,
+		"comments_count": commentsCount,
+		"likes_count":    totalLikes,
 	})
 }
 

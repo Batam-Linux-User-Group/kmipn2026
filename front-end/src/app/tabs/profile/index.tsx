@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare, LogOut } from 'lucide-react-native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { FontFamily } from '@/constants/fontsfamily';
@@ -71,41 +71,52 @@ export default function ProfileScreen() {
 
   const [user, setUser] = useState<User | null>(null);
   const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [postsCount, setPostsCount] = useState(0);
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const [fadeAnim] = useState(() => new Animated.Value(0));
   const [scaleAnim] = useState(() => new Animated.Value(0.95));
 
-  useEffect(() => {
-    let mounted = true;
-    usersApi.getMe()
-      .then((res) => {
-        if (!mounted) return;
-        setUser(res.user);
-        setStreak(res.streak);
-      })
-      .catch((err) => console.error('[Profile] getMe error:', err))
-      .finally(() => {
-        if (mounted) {
-          setIsLoading(false);
-          Animated.parallel([
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 350,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scaleAnim, {
-              toValue: 1,
-              duration: 350,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-      });
-    return () => { mounted = false; };
-  }, [fadeAnim, scaleAnim]);
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      usersApi.getMe()
+        .then((res) => {
+          if (!mounted) return;
+          setUser(res.user);
+          setStreak(res.streak);
+          setPostsCount(res.posts_count);
+          setCommentsCount(res.comments_count);
+          setLikesCount(res.likes_count);
+        })
+        .catch((err) => {
+          console.error('[Profile] getMe error:', err);
+          router.push('/auth/login');
+        })
+        .finally(() => {
+          if (mounted) {
+            setIsLoading(false);
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 350,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 350,
+                useNativeDriver: true,
+              }),
+            ]).start();
+          }
+        });
+      return () => { mounted = false; };
+    }, [fadeAnim, scaleAnim, router])
+  );
 
-  const displayName = user?.display_name || user?.username || 'Pengguna JEDA';
+  const displayName = user?.display_name || 'Pengguna JEDA';
   const currentStreak = streak?.current_streak ?? 0;
   const modeText = user?.is_anonymous ? 'Mode Anonim' : 'Mode Publik';
 
@@ -178,21 +189,21 @@ export default function ProfileScreen() {
                   <View style={[styles.iconBox, { backgroundColor: '#FCE4EC' }]}>
                     <SquarePen size={20} color="#EC407A" />
                   </View>
-                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatValue}>{postsCount}</Text>
                   <Text style={styles.communityStatLabel}>Postingan</Text>
                 </View>
                 <View style={styles.communityStatCol}>
                   <View style={[styles.iconBox, { backgroundColor: '#E0F2F1' }]}>
                     <MessageSquare size={20} color="#00796B" />
                   </View>
-                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatValue}>{commentsCount}</Text>
                   <Text style={styles.communityStatLabel}>Komentar</Text>
                 </View>
                 <View style={styles.communityStatCol}>
                   <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
                     <Heart size={20} color="#388E3C" />
                   </View>
-                  <Text style={styles.communityStatValue}>-</Text>
+                  <Text style={styles.communityStatValue}>{likesCount}</Text>
                   <Text style={styles.communityStatLabel}>Total Suka</Text>
                 </View>
               </View>

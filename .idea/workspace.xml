@@ -5,22 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d4feeb9-1883-4f41-be63-31c4b3dbf5a9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/front-end/src/app/auth/register.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/config/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/config/db.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/back-end/handlers/assessment_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/handlers/assessment_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/back-end/handlers/user_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/handlers/user_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/back-end/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/middleware/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/middleware/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/_layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/auth/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/auth/login.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/forum.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/forum.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/account-settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/account-settings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/edit.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/edit.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/progress.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/progress.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/screens/ResultScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/screens/ResultScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/auth/register.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/auth/register.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/forum-create.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/forum-create.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/screens/JournalScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/screens/JournalScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/services/api.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

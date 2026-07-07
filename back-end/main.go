@@ -46,6 +46,7 @@ func main() {
 		api.GET("/assessments/today", handlers.GetTodayAssessment)
 		api.GET("/assessments/history", handlers.GetAssessmentHistory)
 		api.POST("/assessments", handlers.CreateAssessment)
+		api.PATCH("/assessments/today/journal", handlers.UpdateTodayJournal)
 
 		// ── Forum: Categories ────────────────────────────────────────
 		api.GET("/forum/categories", handlers.GetCategories)

@@ -389,3 +389,75 @@ func GetAssessmentHistory(c *gin.Context) {
 		"days_requested": days,
 	})
 }
+
+// UpdateTodayJournal handles PATCH /api/assessments/today/journal.
+// Updates today's journal text, or creates today's assessment row with empty details.
+func UpdateTodayJournal(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	var req struct {
+		JournalText string `json:"journal_text"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "bad_request",
+			"message": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	today := todayDate()
+
+	var assessment models.DailyAssessment
+	result := config.DB.Where("user_id = ? AND date = ?", userID, today).First(&assessment)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			assessment = models.DailyAssessment{
+				UserID:         userID,
+				Date:           today,
+				Answers:        json.RawMessage([]byte("{}")),
+				TotalScore:     0,
+				RiskStatus:     "Rendah",
+				Recommendation: "Tetap pertahankan pendekatan yang disiplin.",
+				MainInstrument: "",
+				TriggerCount:   0,
+				JournalText:    req.JournalText,
+			}
+			if err := config.DB.Create(&assessment).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error":   "server_error",
+					"message": "Failed to create today's journal: " + err.Error(),
+				})
+				return
+			}
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "server_error",
+				"message": "Failed to query today's assessment: " + result.Error.Error(),
+			})
+			return
+		}
+	} else {
+		assessment.JournalText = req.JournalText
+		if err := config.DB.Save(&assessment).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "server_error",
+				"message": "Failed to update today's journal: " + err.Error(),
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "Journal updated successfully",
+		"journal_text": assessment.JournalText,
+	})
+}
