@@ -27,16 +27,28 @@ function JEDALogo() {
   );
 }
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      setError("Email dan password harus diisi");
+  const handleRegister = async () => {
+    if (!email || !username || !password || !confirmPassword) {
+      setError("Semua kolom harus diisi");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Konfirmasi password tidak cocok");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password minimal 6 karakter");
       return;
     }
 
@@ -44,30 +56,40 @@ export default function LoginScreen() {
     setError("");
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: username,
+            full_name: username,
+          },
+        },
       });
 
-      if (signInError) {
-        setError("Email atau password salah");
+      if (signUpError) {
+        setError(signUpError.message || "Gagal melakukan registrasi");
         return;
       }
 
+      // Sync backend user if session is created immediately
       if (data?.session) {
         try {
           const { user } = data.session;
           await usersApi.sync({
             email: user.email ?? "",
-            display_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User JEDA",
+            display_name: user.user_metadata?.full_name || username || "User JEDA",
+            username: user.user_metadata?.username || username,
             avatar_url: user.user_metadata?.avatar_url || "",
           });
         } catch (syncErr) {
-          console.error("[Login] Sync backend error:", syncErr);
+          console.error("[Register] Sync backend error:", syncErr);
         }
+        router.replace('/assessment');
+      } else {
+        // If confirmation is required or session isn't automatically created
+        setError("Pendaftaran berhasil. Silakan periksa email Anda.");
       }
-
-      router.replace('/tabs');
     } catch {
       setError("Terjadi kesalahan jaringan");
     } finally {
@@ -86,14 +108,16 @@ export default function LoginScreen() {
 
       {/* Text Section */}
       <View style={styles.textSection}>
-        <Text style={styles.welcomeTitle}>Selamat Datang{"\n"}di JEDA</Text>
+        <Text style={styles.welcomeTitle}>Daftar Akun{"\n"}JEDA</Text>
         <Text style={styles.subtitle}>
-          Masuk dengan akun Anda untuk mengakses JEDA
+          Buat akun baru untuk memulai perjalanan finansial sehat Anda
         </Text>
       </View>
 
       {/* Form Section */}
       <View style={styles.formSection}>
+        
+
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -107,7 +131,18 @@ export default function LoginScreen() {
           keyboardType="email-address"
           editable={!isLoading}
         />
-
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor="#7C8C85"
+          value={username}
+          onChangeText={(text) => {
+            setUsername(text);
+            setError("");
+          }}
+          autoCapitalize="none"
+          editable={!isLoading}
+        />
         <TextInput
           style={styles.input}
           placeholder="Password"
@@ -122,36 +157,52 @@ export default function LoginScreen() {
           editable={!isLoading}
         />
 
+        <TextInput
+          style={styles.input}
+          placeholder="Konfirmasi Password"
+          placeholderTextColor="#7C8C85"
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setError("");
+          }}
+          secureTextEntry
+          autoCapitalize="none"
+          editable={!isLoading}
+        />
+
         {error ? (
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={[styles.errorText, error.includes("berhasil") && { color: "#16A34A" }]}>
+            {error}
+          </Text>
         ) : null}
       </View>
 
       {/* Button Section */}
       <View style={styles.buttonSection}>
         <Pressable
-          onPress={handleSignIn}
+          onPress={handleRegister}
           disabled={isLoading}
           style={({ pressed }) => [
-            styles.loginButton,
-            pressed && !isLoading && styles.loginButtonPressed,
-            isLoading && styles.loginButtonDisabled,
+            styles.registerButton,
+            pressed && !isLoading && styles.registerButtonPressed,
+            isLoading && styles.registerButtonDisabled,
           ]}
         >
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.loginButtonText}>Masuk</Text>
+            <Text style={styles.registerButtonText}>Daftar</Text>
           )}
         </Pressable>
 
         <Pressable
-          onPress={() => router.push('/auth/register')}
+          onPress={() => router.push('/auth/login')}
           disabled={isLoading}
-          style={styles.registerLink}
+          style={styles.loginLink}
         >
-          <Text style={styles.registerLinkText}>
-            Belum punya akun? <Text style={styles.registerLinkHighlight}>Daftar</Text>
+          <Text style={styles.loginLinkText}>
+            Sudah punya akun? <Text style={styles.loginLinkHighlight}>Masuk</Text>
           </Text>
         </Pressable>
       </View>
@@ -167,31 +218,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoSection: {
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   logoContainer: {
-    width: 160,
-    height: 160,
+    width: 120,
+    height: 120,
     alignItems: "center",
     justifyContent: "center",
   },
   logoImage: {
-    width: 160,
-    height: 160,
+    width: 120,
+    height: 120,
   },
   textSection: {
     alignItems: "center",
     paddingHorizontal: 32,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   welcomeTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#000000",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 13,
@@ -204,8 +255,8 @@ const styles = StyleSheet.create({
   formSection: {
     width: "100%",
     paddingHorizontal: 32,
-    marginBottom: 24,
-    gap: 12,
+    marginBottom: 20,
+    gap: 10,
   },
   input: {
     backgroundColor: "#FFFFFF",
@@ -234,7 +285,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingBottom: 16,
   },
-  loginButton: {
+  registerButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -248,29 +299,29 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  loginButtonPressed: {
+  registerButtonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
-  loginButtonDisabled: {
+  registerButtonDisabled: {
     opacity: 0.6,
   },
-  loginButtonText: {
+  registerButtonText: {
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
     letterSpacing: 0.2,
   },
-  registerLink: {
+  loginLink: {
     marginTop: 16,
     alignItems: "center",
   },
-  registerLinkText: {
+  loginLinkText: {
     fontSize: 14,
     color: "#1E2A22",
     fontWeight: "500",
   },
-  registerLinkHighlight: {
+  loginLinkHighlight: {
     color: "#1A886A",
     fontWeight: "700",
   },

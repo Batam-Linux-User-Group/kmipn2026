@@ -1,3 +1,6 @@
+
+
+
 // src/screens/ResultScreen.tsx
 // Final result screen showing risk status, recommendation, journal, and navigation.
 
@@ -13,11 +16,13 @@ import {
   Text,
   View,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
 import { FontFamily } from '@/constants/fontsfamily';
+import { assessmentsApi } from '@/services/api';
 
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
@@ -45,7 +50,7 @@ export default function ResultScreen() {
 
   const { status, recommendation } = useMemo(
     () => getStoreRiskStatus(),
-    [totalScore]
+    [getStoreRiskStatus]
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,11 +74,24 @@ export default function ResultScreen() {
 
   const handleFinish = async () => {
     setIsSubmitting(true);
-    // TODO: wire ke POST /api/assessments saat Supabase auth sudah aktif
-    await new Promise(resolve => setTimeout(resolve, 400));
-    setIsSubmitting(false);
-    reset();
-    router.replace('/tabs');
+    try {
+      await assessmentsApi.create({
+        answers,
+        journal_text: journalText,
+        total_score: totalScore,
+        risk_status: status,
+        recommendation,
+        main_instrument: mainInstrument,
+        trigger_count: triggerCount,
+      });
+      reset();
+      router.replace('/tabs');
+    } catch (err) {
+      console.error('[Result] Submit assessment error:', err);
+      Alert.alert('Gagal Menyimpan', (err as Error).message || 'Gagal menyimpan hasil asesmen.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

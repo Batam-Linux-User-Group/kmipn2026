@@ -1,33 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
+  StyleSheet,
+  View,
+  Text,
   Pressable,
   ScrollView,
-  StyleSheet,
-  Text,
-  View,
+  Dimensions,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell } from 'lucide-react-native';
-import Svg, {
-  Circle,
-  Defs,
-  G,
-  Line,
-  LinearGradient,
-  Path,
-  Stop,
-} from 'react-native-svg';
+import Svg, { Path, Circle, G, Line, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/fontsfamily';
+import { useAssessmentStore } from '@/store/useAssessmentStore';
 import { assessmentsApi, AssessmentHistoryEntry } from '@/services/api';
-
-// --------------------------------------------------------------------------
-// Helpers
-// --------------------------------------------------------------------------
 
 const DAY_LABELS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
@@ -50,9 +40,9 @@ function getDayNumber(dateStr: string): number {
 /** Map risk_status → gauge angle (kiri = buruk, kanan = baik) */
 function gaugeAngleFromStatus(status: string): number {
   switch (status) {
-    case 'Rendah': return 40;      // jarum kanan → sehat
-    case 'Rentan': return -10;     // jarum tengah → waspada
-    case 'Adiksi Tinggi': return -55; // jarum kiri → buruk
+    case 'Rendah': return 40;      // jarum kanan → sehat (Baik)
+    case 'Rentan': return -10;     // jarum tengah → waspada (Normal)
+    case 'Adiksi Tinggi': return -55; // jarum kiri → buruk (Buruk)
     default: return 0;
   }
 }
@@ -67,29 +57,20 @@ function statusLabel(status: string): string {
   }
 }
 
-/** Map total_score (0-12+) → Y posisi di chart (makin tinggi score = makin rendah di chart) */
+/** Map total_score (0-14) → Y posisi di chart (makin tinggi score = makin rendah di chart) */
 function scoreToChartY(score: number, chartH: number): number {
   const maxScore = 14;
   const pct = Math.min(score / maxScore, 1);
-  // score tinggi = buruk = turun di chart
   return chartH * 0.15 + pct * chartH * 0.7;
 }
-
-// --------------------------------------------------------------------------
-// Fallback data saat API belum siap / tidak ada data
-// --------------------------------------------------------------------------
-
-const FALLBACK: AssessmentHistoryEntry[] = [];
-
-// --------------------------------------------------------------------------
-// Screen
-// --------------------------------------------------------------------------
 
 export default function ProgressScreen() {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
 
-  const [history, setHistory] = useState<AssessmentHistoryEntry[]>(FALLBACK);
+  const { tradingPlan } = useAssessmentStore();
+
+  const [history, setHistory] = useState<AssessmentHistoryEntry[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -138,8 +119,10 @@ export default function ProgressScreen() {
       const p0 = pts[i];
       const p1 = pts[i + 1];
       const cpX1 = p0.x + dx / 2;
+      const cpY1 = p0.y;
       const cpX2 = p1.x - dx / 2;
-      d += ` C ${cpX1},${p0.y} ${cpX2},${p1.y} ${p1.x},${p1.y}`;
+      const cpY2 = p1.y;
+      d += ` C ${cpX1},${cpY1} ${cpX2},${cpY2} ${p1.x},${p1.y}`;
     }
 
     const last = pts[pts.length - 1];
@@ -150,10 +133,7 @@ export default function ProgressScreen() {
     return { strokePath: d, fillPath: fillD, points: pts, xLabels: labels };
   }, [history, screenWidth]);
 
-  const gaugeAngle = currentData
-    ? gaugeAngleFromStatus(currentData.risk_status)
-    : 0;
-
+  const gaugeAngle = currentData ? gaugeAngleFromStatus(currentData.risk_status) : 0;
   const statusText = currentData ? statusLabel(currentData.risk_status) : '-';
 
   return (
@@ -178,6 +158,12 @@ export default function ProgressScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#3BCFA6" />
           </View>
+        ) : history.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyText, { color: theme.cardSubtitle }]}>
+              Belum ada data assessment.{"\n"}Selesaikan Daily Question untuk memulai!
+            </Text>
+          </View>
         ) : (
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -197,7 +183,7 @@ export default function ProgressScreen() {
 
             {/* EMOTIONAL GAUGE METER */}
             <Text style={styles.gaugeTitle}>Tingkat Emosional Saat Ini</Text>
-
+            
             <View style={styles.gaugeContainer}>
               <Svg width={200} height={110} viewBox="0 0 200 110">
                 <Defs>
@@ -207,6 +193,8 @@ export default function ProgressScreen() {
                     <Stop offset="100%" stopColor="#0FB184" />
                   </LinearGradient>
                 </Defs>
+                
+                {/* Gauge arc track */}
                 <Path
                   d="M 20,100 A 80,80 0 0,1 180,100"
                   fill="none"
@@ -214,24 +202,35 @@ export default function ProgressScreen() {
                   strokeWidth={16}
                   strokeLinecap="round"
                 />
+
+                {/* Needle center anchor */}
                 <Circle cx={100} cy={100} r={10} fill="#1E2A22" />
                 <Circle cx={100} cy={100} r={5} fill="#7C8C85" />
+                
+                {/* Gauge needle indicator */}
                 <G transform={`rotate(${gaugeAngle}, 100, 100)`}>
                   <Line
-                    x1={100} y1={100} x2={100} y2={35}
-                    stroke="#1E2A22" strokeWidth={4} strokeLinecap="round"
+                    x1={100}
+                    y1={100}
+                    x2={100}
+                    y2={35}
+                    stroke="#1E2A22"
+                    strokeWidth={4}
+                    strokeLinecap="round"
                   />
                 </G>
               </Svg>
+              
               <Text style={[styles.gaugeStatusText, { color: theme.mintDark }]}>
                 {statusText}
               </Text>
             </View>
 
-            {/* CHART — hanya tampil jika ada data */}
+            {/* DAILY EMOTION GRAPH */}
             {history.length > 1 && (
               <>
                 <Text style={styles.sectionTitle}>Perkembangan Emosi Harian</Text>
+
                 <View style={styles.graphCard}>
                   <Svg width={screenWidth - 32} height={110}>
                     <Defs>
@@ -240,106 +239,141 @@ export default function ProgressScreen() {
                         <Stop offset="100%" stopColor="#056B4E" stopOpacity={0.0} />
                       </LinearGradient>
                     </Defs>
+                    
+                    {/* Fill area */}
                     <Path d={fillPath} fill="url(#graphGrad)" />
+                    
+                    {/* Wave stroke */}
                     <Path d={strokePath} fill="none" stroke="#056B4E" strokeWidth={3} />
-                    {/* Dot untuk entry yang dipilih */}
+
+                    {/* Highlight dot at selected index */}
                     {points[selectedIndex] && (
                       <Circle
                         cx={points[selectedIndex].x}
                         cy={points[selectedIndex].y}
                         r={5}
-                        fill="#3BCFA6"
+                        fill="#2BD5A2"
                         stroke="#FFFFFF"
                         strokeWidth={2}
                       />
                     )}
                   </Svg>
+
+                  {/* X-Axis Labels */}
                   <View style={styles.xAxisRow}>
-                    {xLabels.map((label, idx) => (
-                      <Text key={idx} style={styles.xAxisLabel}>{label}</Text>
+                    {xLabels.map((day, idx) => (
+                      <Text key={idx} style={styles.xAxisLabel}>
+                        {day}
+                      </Text>
                     ))}
                   </View>
                 </View>
               </>
             )}
 
-            {/* RIWAYAT PILLS */}
-            {history.length > 0 && (
+            {/* RIWAYAT PROGRESS SECTION */}
+            <Text style={[styles.sectionTitleHeader, { color: theme.mintDark }]}>Riwayat Progress</Text>
+
+            {/* HORIZONTAL DATE PILLS */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.datesRow}
+            >
+              {history.map((entry, idx) => {
+                const isSelected = selectedIndex === idx;
+                const dayNum = getDayNumber(entry.date);
+                const dayLbl = getDayLabel(entry.date);
+                return (
+                  <Pressable
+                    key={entry.date}
+                    onPress={() => setSelectedIndex(idx)}
+                    style={[
+                      styles.datePill,
+                      isSelected
+                        ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
+                        : { backgroundColor: '#FFFFFF', borderColor: '#ECEFEF' }
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.dateNumber,
+                        { color: isSelected ? '#FFFFFF' : '#1E2A22' }
+                      ]}
+                    >
+                      {dayNum}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.dateLabelText,
+                        { color: isSelected ? '#A9EAD7' : '#7C8C85' }
+                      ]}
+                    >
+                      {dayLbl}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            {/* DYNAMIC PROGRESS DETAILS CARDS */}
+            {currentData && (
               <>
-                <Text style={[styles.sectionTitleHeader, { color: theme.mintDark }]}>
-                  Riwayat Progress
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.datesRow}
-                >
-                  {history.map((entry, idx) => {
-                    const isSelected = selectedIndex === idx;
-                    return (
-                      <Pressable
-                        key={entry.date}
-                        onPress={() => setSelectedIndex(idx)}
-                        style={[
-                          styles.datePill,
-                          isSelected
-                            ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                            : { backgroundColor: '#FFFFFF', borderColor: '#ECEFEF' },
-                        ]}
-                      >
-                        <Text style={[styles.dateNumber, { color: isSelected ? '#FFFFFF' : '#1E2A22' }]}>
-                          {getDayNumber(entry.date)}
-                        </Text>
-                        <Text style={[styles.dateLabelText, { color: isSelected ? '#A9EAD7' : '#7C8C85' }]}>
-                          {getDayLabel(entry.date)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
+                <View style={styles.detailCard}>
+                  <Text style={styles.detailLabel}>Status Emosi</Text>
+                  <Text style={[styles.detailValue, { color: theme.mintDark }]}>
+                    {statusText}
+                  </Text>
+                </View>
 
-                {/* DETAIL CARDS */}
-                {currentData && (
+                <View style={styles.detailCard}>
+                  <Text style={styles.detailLabel}>Rekomendasi</Text>
+                  <Text style={[styles.detailValue, { color: theme.mintDark, fontSize: 15 }]}>
+                    {currentData.recommendation}
+                  </Text>
+                </View>
+
+                {/* HASIL SELF JOURNAL CARDS */}
+                {currentData.journal_text ? (
                   <>
-                    <View style={styles.detailCard}>
-                      <Text style={styles.detailLabel}>Status Emosi</Text>
-                      <Text style={[styles.detailValue, { color: theme.mintDark }]}>
-                        {statusLabel(currentData.risk_status)}
-                      </Text>
+                    <Text style={[styles.sectionTitleHeader, { color: theme.mintDark, marginTop: Spacing.two }]}>
+                      Hasil Self Journal
+                    </Text>
+                    <View style={styles.journalCard}>
+                      <Text style={styles.journalText}>&quot;{currentData.journal_text}&quot;</Text>
                     </View>
-
-                    <View style={styles.detailCard}>
-                      <Text style={styles.detailLabel}>Rekomendasi</Text>
-                      <Text style={[styles.detailValue, { color: theme.mintDark, fontSize: 15 }]}>
-                        {currentData.recommendation}
-                      </Text>
-                    </View>
-
-                    {currentData.journal_text ? (
-                      <>
-                        <Text style={[styles.sectionTitleHeader, { color: theme.mintDark, marginTop: Spacing.two }]}>
-                          Hasil Self Journal
-                        </Text>
-                        <View style={styles.journalCard}>
-                          <Text style={styles.journalText}>
-                            "{currentData.journal_text}"
-                          </Text>
-                        </View>
-                      </>
-                    ) : null}
                   </>
-                )}
+                ) : null}
               </>
             )}
 
-            {/* Kosong */}
-            {history.length === 0 && !isLoading && (
-              <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.cardSubtitle }]}>
-                  Belum ada data assessment.{'\n'}Selesaikan Daily Question untuk memulai!
+            {/* DYNAMIC TRADING PLAN CARD FROM STORE */}
+            {tradingPlan && (
+              <>
+                <Text style={[styles.sectionTitleHeader, { color: theme.mintDark, marginTop: Spacing.two }]}>
+                  Hasil Trading Plan
                 </Text>
-              </View>
+                <View style={[styles.journalCard, { borderColor: '#3BCFA6' }]}>
+                  <View style={styles.tradingPlanRow}>
+                    <Text style={styles.tradingPlanLabel}>Entry: </Text>
+                    <Text style={styles.tradingPlanVal}>{tradingPlan.entry}</Text>
+                  </View>
+                  <View style={styles.tradingPlanRow}>
+                    <Text style={styles.tradingPlanLabel}>Harga: </Text>
+                    <Text style={styles.tradingPlanVal}>{tradingPlan.price}</Text>
+                  </View>
+                  <View style={styles.tradingPlanRow}>
+                    <Text style={styles.tradingPlanLabel}>TP & SL: </Text>
+                    <Text style={styles.tradingPlanVal}>{tradingPlan.tpSl}</Text>
+                  </View>
+                  <View style={styles.tradingPlanRow}>
+                    <Text style={styles.tradingPlanLabel}>Alasan: </Text>
+                    <Text style={styles.tradingPlanVal}>{tradingPlan.reason}</Text>
+                  </View>
+                </View>
+              </>
             )}
+
           </ScrollView>
         )}
       </SafeAreaView>
@@ -348,9 +382,30 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyText: {
+    fontSize: 15,
+    fontFamily: FontFamily.manropeMedium,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -358,37 +413,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '700', marginLeft: Spacing.two },
-  bellButton: { padding: Spacing.one },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: FontFamily.manropeBold,
+    marginLeft: Spacing.two,
+  },
+  bellButton: {
+    padding: Spacing.one,
+  },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 110,
+    paddingBottom: 180, // Perbesar dari 110 agar bisa scroll lebih jauh ke bawah tanpa tertutup navigation bar
   },
   streakRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.four,
     gap: 10,
   },
   streakPill: {
     flex: 1,
-    backgroundColor: '#F0FDF8',
+    backgroundColor: '#FAFDFD',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#C5E3DE',
+    borderColor: '#ECEFEF',
     padding: 14,
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
   streakValue: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     color: '#1A886A',
   },
   streakLabel: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#7C8C85',
     letterSpacing: 0.5,
     marginTop: 4,
@@ -396,76 +465,87 @@ const styles = StyleSheet.create({
   },
   gaugeTitle: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#7C8C85',
     textAlign: 'center',
     marginTop: Spacing.one,
-    marginBottom: Spacing.two,
+    marginBottom: Spacing.three,
   },
   gaugeContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: Spacing.one,
+    marginBottom: Spacing.four,
   },
   gaugeStatusText: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: FontFamily.manropeExtraBold,
     marginTop: 10,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     color: '#7C8C85',
     textAlign: 'center',
     marginTop: Spacing.five,
-    marginBottom: Spacing.two,
+    marginBottom: Spacing.three,
   },
   graphCard: {
-    backgroundColor: '#FAFDFD',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    paddingTop: 16,
-    paddingBottom: 10,
-    alignItems: 'center',
+    padding: 16,
     borderWidth: 1,
     borderColor: '#ECEFEF',
     marginBottom: Spacing.five,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   xAxisRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     marginTop: 8,
   },
   xAxisLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: FontFamily.manropeSemiBold,
     color: '#B0C2B8',
     width: 20,
     textAlign: 'center',
   },
   sectionTitleHeader: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FontFamily.manropeBold,
     marginBottom: Spacing.three,
   },
-  datesRow: { flexDirection: 'row', paddingBottom: Spacing.four },
+  datesRow: {
+    flexDirection: 'row',
+    paddingBottom: Spacing.four,
+  },
   datePill: {
     width: 48,
     height: 58,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOpacity: 0.06,
+    shadowRadius: 17,
+    elevation: 3,
   },
-  dateNumber: { fontSize: 14, fontWeight: '800' },
-  dateLabelText: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+  dateNumber: {
+    fontSize: 14,
+    fontFamily: FontFamily.manropeExtraBold,
+  },
+  dateLabelText: {
+    fontSize: 10,
+    fontFamily: FontFamily.manropeSemiBold,
+    marginTop: 2,
+  },
   detailCard: {
     backgroundColor: '#FAFDFD',
     borderRadius: 16,
@@ -473,9 +553,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ECEFEF',
     marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
-  detailLabel: { fontSize: 12, fontWeight: '600', color: '#7C8C85', marginBottom: 4 },
-  detailValue: { fontSize: 16, fontWeight: '700' },
+  detailLabel: {
+    fontSize: 12,
+    fontFamily: FontFamily.manropeSemiBold,
+    color: '#7C8C85',
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 16,
+    fontFamily: FontFamily.manropeBold,
+  },
   journalCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -484,25 +577,32 @@ const styles = StyleSheet.create({
     borderColor: '#3BCFA6',
     marginBottom: 12,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 4,
   },
   journalText: {
     fontSize: 14,
     fontStyle: 'italic',
+    fontFamily: FontFamily.manropeMedium,
     color: '#1A2520',
     lineHeight: 22,
   },
-  emptyContainer: {
-    marginTop: 60,
-    alignItems: 'center',
-    paddingHorizontal: 32,
+  tradingPlanRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
   },
-  emptyText: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 24,
+  tradingPlanLabel: {
+    width: 75,
+    fontSize: 14,
+    fontFamily: FontFamily.manropeBold,
+    color: '#1A886A',
+  },
+  tradingPlanVal: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FontFamily.manropeMedium,
+    color: '#1A2520',
   },
 });

@@ -229,3 +229,29 @@ func UpdateMe(c *gin.Context) {
 		"user":    user,
 	})
 }
+
+// DeleteMe handles DELETE /api/users/me.
+// Deletes the authenticated user's record from database.
+func DeleteMe(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	result := config.DB.Where("id = ?", userID).Delete(&models.User{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "server_error",
+			"message": "Failed to delete user profile: " + result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User profile deleted successfully",
+	})
+}

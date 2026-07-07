@@ -5,33 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d4feeb9-1883-4f41-be63-31c4b3dbf5a9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/front-end/src/app/trading-plan.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front-end/src/assets/animation/CommunityV2.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front-end/src/assets/animation/MeditatingBrain.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front-end/src/data/onboardingData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/front-end/src/screens/TradingPlanScreen.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/auth/register.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/config/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/config/db.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/handlers/assessment_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/handlers/assessment_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/back-end/handlers/user_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/handlers/user_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/back-end/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/middleware/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/middleware/auth.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/onboarding.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/onboarding.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/forum-create.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/forum-create.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/forum-detail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/forum-detail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/auth/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/auth/login.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/forum.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/forum.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/about.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/about.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/account-settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/account-settings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/app-settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/app-settings.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/edit.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/edit.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/profile/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/profile/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/constants/fontsfamily.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/constants/fontsfamily.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/screens/AssessmentScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/screens/AssessmentScreen.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/screens/JournalScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/screens/JournalScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/app/tabs/progress.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/tabs/progress.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/screens/ResultScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/screens/ResultScreen.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/store/useAssessmentStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/store/useAssessmentStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/services/api.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,21 +43,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "Merging fawwaz",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/musuko/Projects/jeda",
-    "settings.editor.selected.configurable": "AndroidSdkUpdater"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fawwaz&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/musuko/Projects/jeda&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="9d4feeb9-1883-4f41-be63-31c4b3dbf5a9" name="Changes" comment="" />

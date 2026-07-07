@@ -1,7 +1,7 @@
+import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Flame } from "lucide-react-native";
-import { useState } from "react";
+import { Bell, Flame } from "lucide-react-native";
 import {
   Pressable,
   ScrollView,
@@ -9,14 +9,19 @@ import {
   Text,
   View,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Path } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 
 import { Spacing } from "@/constants/theme";
+import { FontFamily } from "@/constants/fontsfamily";
 import { useTheme } from "@/hooks/use-theme";
+import { usersApi, quotesApi, assessmentsApi, User, UserStreak, DailyQuote, TodayStatus } from "@/services/api";
 
-function CalendarIcon() {
+// ─── SVG Icons for Menu Cards ───────────────────────────────
+
+function DailyQuestionIcon() {
   return (
     <Svg width={44} height={44} viewBox="0 0 44 44" fill="none">
       <Path
@@ -43,7 +48,7 @@ function CalendarIcon() {
   );
 }
 
-function BookIcon() {
+function SelfJournalIcon() {
   return (
     <Svg width={44} height={44} viewBox="0 0 44 44" fill="none">
       <Path
@@ -70,26 +75,118 @@ function BookIcon() {
   );
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Selamat Pagi';
-  if (hour < 15) return 'Selamat Siang';
-  if (hour < 18) return 'Selamat Sore';
-  return 'Selamat Malam';
+function TradingPlanIcon() {
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" fill="none">
+      <Path
+        d="M10 32h6V18h-6v14zM19 32h6V10h-6v22zM28 32h6v-8h-6v8z"
+        fill="#2BD5A2"
+      />
+      <Path
+        d="M6 36h32"
+        stroke="#2BD5A2"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M12 14l10-8 10 8"
+        stroke="#2BD5A2"
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function TakeJEDAIcon() {
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" fill="none">
+      <Path
+        d="M10 20c4-4 8-4 12 0s8 4 12 0"
+        stroke="#2BD5A2"
+        strokeWidth={3}
+        strokeLinecap="round"
+        fill="none"
+      />
+      <Path
+        d="M10 26c4-4 8-4 12 0s8 4 12 0"
+        stroke="#2BD5A2"
+        strokeWidth={3}
+        strokeLinecap="round"
+        fill="none"
+      />
+    </Svg>
+  );
 }
 
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [mood, setMood] = useState<"tidak" | "ya">("ya");
+
+  const [user, setUser] = useState<User | null>(null);
+  const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [quote, setQuote] = useState<DailyQuote | null>(null);
+  const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        const [meRes, quoteRes, todayRes] = await Promise.all([
+          usersApi.getMe(),
+          quotesApi.getRandom(),
+          assessmentsApi.getToday(),
+        ]);
+        if (!mounted) return;
+        setUser(meRes.user);
+        setStreak(meRes.streak);
+        setQuote(quoteRes);
+        setTodayStatus(todayRes);
+      } catch (err) {
+        console.error('[Home] loadData error:', err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#C5E3DE' }]}>
+        <ActivityIndicator size="large" color="#3BCFA6" />
+      </View>
+    );
+  }
+
+  const displayName = user?.display_name || user?.username || 'Trader JEDA';
+  const currentStreak = streak?.current_streak ?? 0;
+  const quoteText = quote?.quote_text || 'Investasi yang sehat dimulai dengan perencanaan yang matang, bukan dorongan impulsif.';
+  const quoteAuthor = quote?.author || 'Prinsip JEDA';
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[theme.mintGradientStart, theme.mintGradientEnd]}
+        colors={["#A8EAD7", "#A8EAD7"]}
         style={StyleSheet.absoluteFill}
         start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 0.4 }}
+        end={{ x: 0.5, y: 0.3 }}
       />
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
         {/* HEADER SECTION */}
@@ -101,159 +198,129 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <View style={styles.profileText}>
-              <Text style={[styles.greetingText, { color: theme.mintDark + "99" }]}>
+              <Text
+                style={[styles.greetingText, { color: theme.mintDark + "99" }]}
+              >
                 {getGreeting()}
               </Text>
               <Text style={[styles.nameText, { color: theme.mintDark }]}>
-                Fawwaz Khairiy Wahid
+                {displayName}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.streakContainer, { backgroundColor: theme.mintStreakBackground }]}>
-            <Flame size={20} color={theme.streakOrange} fill={theme.streakOrange} />
-            <Text style={[styles.streakText, { color: theme.text }]}>7</Text>
+          <View
+            style={[
+              styles.streakContainer,
+              { backgroundColor: theme.mintStreakBackground },
+            ]}
+          >
+            <Flame
+              size={20}
+              color={theme.streakOrange}
+              fill={theme.streakOrange}
+            />
+            <Text style={[styles.streakText, { color: theme.text }]}>{currentStreak}</Text>
           </View>
         </View>
 
-        {/* QUOTE SECTION */}
-        <View style={styles.quoteSection}>
-          <Text style={[styles.quoteText, { color: "#11221A" }]}>
-            Investasi yang sehat dimulai dengan perencanaan yang matang, bukan
-            dorongan impulsif.
-          </Text>
-          <Text style={[styles.quoteAuthor, { color: theme.cardSubtitle }]}>
-            — Prinsip Investasi Sehat
-          </Text>
-        </View>
-
-        {/* WHITE MAIN CARD */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          style={styles.whiteCardScroll}
-          contentContainerStyle={styles.whiteCardContent}
+          style={{ backgroundColor: 'transparent' }}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          <Text style={styles.promptText}>
-            Emosi anda hari ini kurang baik hari ini, mohon ambil JEDA!
-          </Text>
+          {/* WHITE SHEET BACKGROUND WRAPPER FOR SCROLL CONTENT */}
+          <View style={styles.whiteSheet}>
+            {/* QUOTES CARD */}
+            <View style={styles.quotesCardOuter}>
+              <View style={styles.quotesBlur}>
+                <Text style={styles.quotesTitle}>Quotes of the day</Text>
+                <Text style={styles.quotesText}>
+                  {quoteText}
+                </Text>
+                <Text style={styles.quotesAuthor}>
+                  — {quoteAuthor}
+                </Text>
+              </View>
+            </View>
 
-          {/* MOOD BUTTONS */}
-          <View style={styles.moodButtonsRow}>
-            <Pressable
-              onPress={() => setMood("tidak")}
-              style={[
-                styles.moodButton,
-                mood === "tidak"
-                  ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                  : { backgroundColor: "#FFFFFF", borderColor: theme.mintBorder },
-              ]}
-            >
-              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-                <Circle
-                  cx={12} cy={12} r={10}
-                  stroke={mood === "tidak" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2.5}
-                />
-                <Path
-                  d="M8 10c.3-.5.8-.5 1.2 0M14.8 10c.3-.5.8-.5 1.2 0"
-                  stroke={mood === "tidak" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-                <Path
-                  d="M8 15c1 1.5 2.5 2 4 2s3-.5 4-2"
-                  stroke={mood === "tidak" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </Svg>
-              <Text style={[styles.moodButtonText, { color: mood === "tidak" ? "#FFFFFF" : theme.mintDark }]}>
-                Tidak
-              </Text>
-            </Pressable>
+            {/* MENU GRID 2×2 */}
+            <View style={styles.menuGrid}>
+              <View style={styles.menuRow}>
+                <Pressable
+                  onPress={() => router.push('/assessment')}
+                  style={({ pressed }) => [
+                    styles.menuCard,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                  ]}
+                >
+                  <DailyQuestionIcon />
+                  <Text style={styles.menuCardTitle}>Daily{"\n"}Question</Text>
+                </Pressable>
 
-            <Pressable
-              onPress={() => setMood("ya")}
-              style={[
-                styles.moodButton,
-                mood === "ya"
-                  ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                  : { backgroundColor: "#FFFFFF", borderColor: theme.mintBorder },
-              ]}
-            >
-              <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-                <Circle
-                  cx={12} cy={12} r={10}
-                  stroke={mood === "ya" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2.5}
-                />
-                <Path
-                  d="M9 10h.01M15 10h.01"
-                  stroke={mood === "ya" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                />
-                <Path
-                  d="M16 16c-1-1.5-2.5-2-4-2s-3 .5-4 2"
-                  stroke={mood === "ya" ? "#FFFFFF" : theme.mintDark}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </Svg>
-              <Text style={[styles.moodButtonText, { color: mood === "ya" ? "#FFFFFF" : theme.mintDark }]}>
-                Ya
-              </Text>
-            </Pressable>
+                <Pressable
+                  onPress={() => router.push('/journal')}
+                  style={({ pressed }) => [
+                    styles.menuCard,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                  ]}
+                >
+                  <SelfJournalIcon />
+                  <Text style={styles.menuCardTitle}>Self{"\n"}Journalling</Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.menuRow}>
+                <Pressable
+                  onPress={() => router.push('/trading-plan')}
+                  style={({ pressed }) => [
+                    styles.menuCard,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                  ]}
+                >
+                  <TradingPlanIcon />
+                  <Text style={styles.menuCardTitle}>Trading{"\n"}Plan</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => router.push('/breathing')}
+                  style={({ pressed }) => [
+                    styles.menuCard,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                  ]}
+                >
+                  <TakeJEDAIcon />
+                  <Text style={styles.menuCardTitle}>Take{"\n"}JEDA</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* EMOTION BANNER CAPSULE */}
+            {todayStatus && (
+              <View style={styles.emotionBanner}>
+                <View style={styles.emotionInnerContainer}>
+                  <Text style={styles.emotionBannerText}>
+                    {!todayStatus.isCompletedToday ? (
+                      <>
+                        Anda belum mengisi Daily Question hari ini. Yuk <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    ) : todayStatus.risk_status === 'Rendah' ? (
+                      <>
+                        Emosi Anda hari ini terpantau stabil. Tetap pertahankan <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    ) : (
+                      <>
+                        Emosi Anda hari ini kurang stabil ({todayStatus.risk_status}). Mohon ambil <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    )}
+                  </Text>
+                </View>
+                <View style={styles.emotionBellWrapper}>
+                  <Bell size={24} color="#000000" fill="#000000" />
+                </View>
+              </View>
+            )}
           </View>
-
-          {/* BREATHING TRIGGER */}
-          <Pressable
-            onPress={() => router.push('/breathing')}
-            style={({ pressed }) => [
-              styles.breathingButton,
-              { backgroundColor: theme.mintMedium },
-              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-            ]}
-          >
-            <Text style={styles.breathingButtonText}>Pernapasan 2 menit</Text>
-          </Pressable>
-
-          {/* ACTION CARDS */}
-          <Pressable
-            onPress={() => router.push('/assessment')}
-            style={({ pressed }) => [
-              styles.actionCard,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-            ]}
-          >
-            <View style={styles.actionCardIconWrapper}>
-              <CalendarIcon />
-            </View>
-            <View style={styles.actionCardContent}>
-              <Text style={styles.actionCardTitle}>Daily Question</Text>
-              <Text style={[styles.actionCardSubtitle, { color: theme.cardSubtitle }]}>
-                Answer to activate streak
-              </Text>
-            </View>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push('/journal')}
-            style={({ pressed }) => [
-              styles.actionCard,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-            ]}
-          >
-            <View style={styles.actionCardIconWrapper}>
-              <BookIcon />
-            </View>
-            <View style={styles.actionCardContent}>
-              <Text style={styles.actionCardTitle}>Self Journalling</Text>
-              <Text style={[styles.actionCardSubtitle, { color: theme.cardSubtitle }]}>
-                Manual Input
-              </Text>
-            </View>
-          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -263,7 +330,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
   safeArea: {
     flex: 1,
@@ -273,7 +340,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingTop: 24, // Diturunkan dari Spacing.two agar elemen atas turun ke bawah
     paddingBottom: Spacing.three,
   },
   profileContainer: {
@@ -285,11 +352,11 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: FontFamily.manropeMedium,
   },
   nameText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: FontFamily.manropeBold,
   },
   streakContainer: {
     flexDirection: "row",
@@ -300,117 +367,144 @@ const styles = StyleSheet.create({
   },
   streakText: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: FontFamily.manropeBold,
     marginLeft: 6,
   },
-  quoteSection: {
-    paddingHorizontal: Spacing.five,
-    marginTop: Spacing.two,
-    alignItems: "center",
+  scrollContent: {
+    paddingBottom: Spacing.six + 160, // Perbesar padding bottom agar bisa scroll lebih jauh ke bawah dan tidak terhalang navigation bar
   },
-  quoteText: {
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 25,
-    textAlign: "center",
-  },
-  quoteAuthor: {
-    fontSize: 13,
-    fontWeight: "400",
-    marginTop: Spacing.two,
-    textAlign: "center",
-  },
-  whiteCardScroll: {
+  whiteSheet: {
+    backgroundColor: "#F8FAF9", // warna putih melengkung latar belakang card
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: 40,
     flex: 1,
-    marginTop: Spacing.four,
+    marginTop: 10, // Dinaikkan lebih ke atas (sebelumnya Spacing.four)
+  },
+
+  // Quotes Card
+  quotesCardOuter: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  whiteCardContent: {
-    padding: Spacing.four,
-    paddingBottom: Spacing.six + 90,
-  },
-  promptText: {
-    fontSize: 18,
-    fontWeight: "500",
-    textAlign: "center",
-    color: "#414D46",
-    lineHeight: 25,
+    borderRadius: 20,
+    overflow: "hidden",
     marginBottom: Spacing.four,
-    paddingHorizontal: Spacing.two,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "#ECEFEF",
   },
-  moodButtonsRow: {
+  quotesBlur: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  quotesTitle: {
+    fontSize: 15,
+    fontFamily: FontFamily.manropeBold,
+    color: "#2D3748",
+    marginBottom: 12,
+    textAlign: "center",
+    letterSpacing: 0.3,
+  },
+  quotesText: {
+    fontSize: 18,
+    fontFamily: "serif",
+    fontStyle: "italic",
+    color: "#4A5568",
+    textAlign: "center",
+    lineHeight: 26,
+    paddingHorizontal: 6,
+  },
+  quotesAuthor: {
+    fontSize: 12,
+    fontFamily: FontFamily.manropeMedium,
+    color: '#718096',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+
+  // Menu Grid
+  menuGrid: {
+    marginBottom: Spacing.four,
+  },
+  menuRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: Spacing.four,
+    marginBottom: 16,
   },
-  moodButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    marginHorizontal: Spacing.one,
-  },
-  moodButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: Spacing.two,
-  },
-  breathingButton: {
-    paddingVertical: 16,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.five,
-    shadowColor: "#2BD5A2",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  breathingButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  actionCard: {
+  menuCard: {
     backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
     borderRadius: 20,
-    marginBottom: Spacing.three,
+    width: "47%",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: "#ECEFEF",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 6,
   },
-  actionCardIconWrapper: {
-    marginRight: Spacing.four,
-  },
-  actionCardContent: {
-    flex: 1,
-  },
-  actionCardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+  menuCardTitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.manropeBold,
     color: "#1A2520",
+    textAlign: "center",
+    marginTop: 10,
+    lineHeight: 20,
   },
-  actionCardSubtitle: {
+
+  // Emotion Banner (Capsule Shape)
+  emotionBanner: {
+    backgroundColor: "#8BE3C9", // warna hijau mint luar
+    borderRadius: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8, // dikurangi agar pas dan rapi
+    paddingLeft: 8,
+    paddingRight: 20,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
+    marginBottom: Spacing.four,
+  },
+  emotionInnerContainer: {
+    flex: 1,
+    backgroundColor: "#DCF5EC", // warna text container bubble putih kehijauan dalam
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#BEECE0",
+  },
+  emotionBannerText: {
     fontSize: 13,
-    fontWeight: "500",
-    marginTop: 2,
+    fontFamily: FontFamily.manropeMedium,
+    color: "#414D46",
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  emotionBannerBold: {
+    fontFamily: FontFamily.manropeBold,
+    color: "#2BD5A2",
+  },
+  emotionBellWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

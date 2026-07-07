@@ -36,6 +36,7 @@ type TodayResponse struct {
 	IsCompletedToday bool   `json:"isCompletedToday"`
 	CurrentStreak    int    `json:"current_streak"`
 	JournalText      string `json:"journal_text"`
+	RiskStatus       string `json:"risk_status"`
 }
 
 // AssessmentResponse is the response body for POST /api/assessments.
@@ -93,6 +94,7 @@ func GetTodayAssessment(c *gin.Context) {
 
 	isCompletedToday := true
 	journalText := ""
+	riskStatus := ""
 
 	if assessmentResult.Error != nil {
 		if errors.Is(assessmentResult.Error, gorm.ErrRecordNotFound) {
@@ -106,6 +108,7 @@ func GetTodayAssessment(c *gin.Context) {
 		}
 	} else {
 		journalText = assessment.JournalText
+		riskStatus = assessment.RiskStatus
 	}
 
 	// 3. Get current streak
@@ -122,6 +125,7 @@ func GetTodayAssessment(c *gin.Context) {
 		IsCompletedToday: isCompletedToday,
 		CurrentStreak:    currentStreak,
 		JournalText:      journalText,
+		RiskStatus:       riskStatus,
 	})
 }
 

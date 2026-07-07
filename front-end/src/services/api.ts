@@ -52,6 +52,7 @@ export interface TodayStatus {
   isCompletedToday: boolean;
   current_streak: number;
   journal_text: string;
+  risk_status: string;
 }
 
 export interface AssessmentHistoryEntry {
@@ -96,7 +97,7 @@ async function getAuthToken(): Promise<string | null> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  return session?.access_token ?? 'development';
 }
 
 async function apiFetch<T>(
@@ -139,7 +140,7 @@ async function apiFetch<T>(
 
 export const usersApi = {
   /** Sync Supabase Auth user to our database after login. */
-  sync: (payload: { email: string; display_name: string; avatar_url: string }) =>
+  sync: (payload: { email: string; display_name: string; username?: string; avatar_url: string }) =>
     apiFetch<{ message: string; user: User }>('/api/users/sync', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -159,6 +160,12 @@ export const usersApi = {
     apiFetch<{ message: string; user: User }>('/api/users/me', {
       method: 'PATCH',
       body: JSON.stringify(payload),
+    }),
+
+  /** Delete current user profile. */
+  deleteMe: () =>
+    apiFetch<{ message: string }>('/api/users/me', {
+      method: 'DELETE',
     }),
 };
 

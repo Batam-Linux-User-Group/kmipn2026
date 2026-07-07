@@ -40,6 +40,7 @@ func main() {
 		api.POST("/users/sync", handlers.SyncUser)
 		api.GET("/users/me", handlers.GetMe)
 		api.PATCH("/users/me", handlers.UpdateMe)
+		api.DELETE("/users/me", handlers.DeleteMe)
 
 		// ── Assessment routes ────────────────────────────────────────
 		api.GET("/assessments/today", handlers.GetTodayAssessment)

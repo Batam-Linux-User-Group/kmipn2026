@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -65,7 +65,7 @@ export default function ForumScreen() {
   useEffect(() => {
     fetchCategories();
     fetchPosts();
-  }, []);
+  }, [fetchCategories, fetchPosts]);
 
   const handleCategorySelect = useCallback(
     (categoryId: string | null) => {
@@ -129,7 +129,7 @@ export default function ForumScreen() {
               style={({ pressed }) => [
                 styles.plusButton,
                 { backgroundColor: theme.mintMedium },
-                pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] },
+                pressed && { opacity: 0.9, transform: [{ scale: 0.95 }] }
               ]}
             >
               <Plus size={20} color="#FFFFFF" strokeWidth={3} />
@@ -149,13 +149,13 @@ export default function ForumScreen() {
                 styles.categoryPill,
                 selectedCategoryId === null
                   ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                  : { backgroundColor: '#ECEFEF', borderColor: '#ECEFEF' },
+                  : { backgroundColor: '#ECEFEF', borderColor: '#ECEFEF' }
               ]}
             >
               <Text
                 style={[
                   styles.categoryText,
-                  { color: selectedCategoryId === null ? '#FFFFFF' : theme.mintDark },
+                  { color: selectedCategoryId === null ? '#FFFFFF' : theme.mintDark }
                 ]}
               >
                 {ALL_LABEL}
@@ -173,10 +173,15 @@ export default function ForumScreen() {
                     styles.categoryPill,
                     isActive
                       ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                      : { backgroundColor: '#ECEFEF', borderColor: '#ECEFEF' },
+                      : { backgroundColor: '#ECEFEF', borderColor: '#ECEFEF' }
                   ]}
                 >
-                  <Text style={[styles.categoryText, { color: isActive ? '#FFFFFF' : theme.mintDark }]}>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      { color: isActive ? '#FFFFFF' : theme.mintDark }
+                    ]}
+                  >
                     {cat.name}
                   </Text>
                 </Pressable>
@@ -245,6 +250,7 @@ export default function ForumScreen() {
                   </View>
 
                   <View style={styles.footerRight}>
+                    {/* Comments button */}
                     <Pressable
                       onPress={() => handlePostDetail(post.id)}
                       style={styles.footerActionButton}
@@ -253,6 +259,7 @@ export default function ForumScreen() {
                       <Text style={styles.footerText}>{post.comments_count}</Text>
                     </Pressable>
 
+                    {/* Likes button */}
                     <Pressable
                       onPress={() => handleLike(post.id)}
                       style={styles.footerActionButton}
@@ -261,6 +268,7 @@ export default function ForumScreen() {
                       <Text style={styles.footerText}>{post.likes_count}</Text>
                     </Pressable>
 
+                    {/* Share button */}
                     <Pressable style={styles.footerActionButton}>
                       <Share2 size={16} color="#7C8C85" />
                     </Pressable>
@@ -281,8 +289,13 @@ export default function ForumScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  safeArea: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -290,14 +303,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '700', marginLeft: Spacing.two },
-  headerRight: { flexDirection: 'row' },
-  iconButton: { padding: Spacing.one, marginLeft: Spacing.two },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: FontFamily.manropeBold,
+    marginLeft: Spacing.two,
+  },
+  headerRight: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    padding: Spacing.one,
+    marginLeft: Spacing.two,
+  },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 110,
+    paddingBottom: 180, // Perbesar dari 110 agar bisa scroll lebih ke bawah dan tidak terhalang navigation bar
   },
   shareCard: {
     flexDirection: 'row',
@@ -308,14 +333,29 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
     shadowColor: '#056B4E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 17,
+    elevation: 6,
   },
-  shareCardLeft: { flexDirection: 'row', alignItems: 'center' },
-  shareCardText: { marginLeft: 12 },
-  shareCardTitle: { color: '#A9EAD7', fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  shareCardSubtitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '600', marginTop: 2 },
+  shareCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareCardText: {
+    marginLeft: 12,
+  },
+  shareCardTitle: {
+    color: '#A9EAD7',
+    fontSize: 12,
+    fontFamily: FontFamily.manropeBold,
+    letterSpacing: 1,
+  },
+  shareCardSubtitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: FontFamily.manropeSemiBold,
+    marginTop: 2,
+  },
   plusButton: {
     width: 36,
     height: 36,
@@ -323,7 +363,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  categoriesRow: { flexDirection: 'row', paddingBottom: Spacing.four },
+  categoriesRow: {
+    flexDirection: 'row',
+    paddingBottom: Spacing.four,
+  },
   categoryPill: {
     paddingHorizontal: Spacing.four,
     paddingVertical: 10,
@@ -331,7 +374,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginRight: 10,
   },
-  categoryText: { fontSize: 14, fontWeight: '700' },
+  categoryText: {
+    fontSize: 14,
+    fontFamily: FontFamily.manropeBold,
+  },
   postCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
@@ -341,20 +387,36 @@ const styles = StyleSheet.create({
     borderColor: '#ECEFEF',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 17,
+    elevation: 5,
   },
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  postHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  postUserText: { marginLeft: 12 },
-  usernameRow: { flexDirection: 'row', alignItems: 'center' },
-  usernameText: { fontSize: 15, fontWeight: '700', color: '#1A2520' },
-  userRole: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  postHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postUserText: {
+    marginLeft: 12,
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  usernameText: {
+    fontSize: 15,
+    fontFamily: FontFamily.manropeBold,
+    color: '#1A2520',
+  },
+  userRole: {
+    fontSize: 12,
+    fontFamily: FontFamily.manropeMedium,
+    marginTop: 2,
+  },
   tagPill: {
     borderWidth: 1,
     borderRadius: 12,
@@ -364,29 +426,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FAFDFD',
   },
-  tagText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  tagText: {
+    fontSize: 10,
+    fontFamily: FontFamily.manropeBold,
+    letterSpacing: 0.5,
+  },
   postContent: {
     fontSize: 15,
     color: '#283830',
     lineHeight: 22,
-    fontWeight: '500',
+    fontFamily: FontFamily.manropeMedium,
     marginVertical: 14,
   },
-  divider: { height: 1, backgroundColor: '#F0F2F2', marginVertical: 4 },
+  divider: {
+    height: 1,
+    backgroundColor: '#F0F2F2',
+    marginVertical: 4,
+  },
   postFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 8,
   },
-  footerLeft: { flexDirection: 'row', alignItems: 'center' },
-  footerRight: { flexDirection: 'row', alignItems: 'center' },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   footerActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 16,
     paddingVertical: 4,
   },
-  footerText: { fontSize: 13, color: '#7C8C85', fontWeight: '600' },
-  noPostsText: { textAlign: 'center', marginTop: 40, fontSize: 15 },
+  footerText: {
+    fontSize: 13,
+    color: '#7C8C85',
+    fontFamily: FontFamily.manropeSemiBold,
+  },
+  noPostsText: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 15,
+    fontFamily: FontFamily.manropeMedium,
+  },
 });
