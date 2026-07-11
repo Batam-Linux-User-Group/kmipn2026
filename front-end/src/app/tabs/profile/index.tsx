@@ -1,20 +1,22 @@
-import React, { useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   View,
   Text,
   Pressable,
   ScrollView,
   Animated,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Flame, ChevronRight, Smile, Lock, Settings, Info, SquarePen, Heart, MessageSquare, LogOut } from 'lucide-react-native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
-import { Image } from "react-native";
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { FontFamily } from '@/constants/fontsfamily';
+import { usersApi, User, UserStreak } from '@/services/api';
 
 
 // Custom high-fidelity profile avatar (green haired boy with sunglasses & hoodie)
@@ -66,49 +68,69 @@ function ProfileAvatar({ size = 100 }: { size?: number }) {
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
-  
-  // Animated values for logout animation
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handleLogout = () => {
-    // Play fade-out + scale-down animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 0.92,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // After animation completes, navigate to login
-      router.replace('/auth/login');
-      // Reset animation values for next time
-      fadeAnim.setValue(1);
-      scaleAnim.setValue(1);
-    });
+  const [user, setUser] = useState<User | null>(null);
+  const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [postsCount, setPostsCount] = useState(0);
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [scaleAnim] = useState(() => new Animated.Value(0.95));
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      usersApi.getMe()
+        .then((res) => {
+          if (!mounted) return;
+          setUser(res.user);
+          setStreak(res.streak);
+          setPostsCount(res.posts_count);
+          setCommentsCount(res.comments_count);
+          setLikesCount(res.likes_count);
+        })
+        .catch((err) => {
+          console.error('[Profile] getMe error:', err);
+          router.push('/auth/login');
+        })
+        .finally(() => {
+          if (mounted) {
+            setIsLoading(false);
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 350,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 350,
+                useNativeDriver: true,
+              }),
+            ]).start();
+          }
+        });
+      return () => { mounted = false; };
+    }, [fadeAnim, scaleAnim, router])
+  );
+
+  const displayName = user?.display_name || 'Pengguna JEDA';
+  const currentStreak = streak?.current_streak ?? 0;
+  const modeText = user?.is_anonymous ? 'Mode Anonim' : 'Mode Publik';
+
+  const handlePressSetting = (title: string) => {
+    const navigationMap: { [key: string]: () => void } = {
+      'Edit Profile': () => router.push('/tabs/profile/edit'),
+      'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
+      'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
+      'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
+      'Keluar': () => router.replace('/auth/login'),
+    };
+    const action = navigationMap[title];
+    if (action) action();
   };
-
- const handlePressSetting = (title: string) => {
-  const navigationMap: { [key: string]: () => void } = {
-    'Edit Profile': () => router.push('/tabs/profile/edit'),
-    'Pengaturan Akun': () => router.push('/tabs/profile/account-settings'),
-    'Pengaturan Aplikasi': () => router.push('/tabs/profile/app-settings'),
-    'Tentang Aplikasi': () => router.push('/tabs/profile/about'),
-    'Keluar': handleLogout,
-  };
-
-  const action = navigationMap[title];
-  if (action) {
-    action();
-  } else {
-    console.warn(`No navigation route defined for ${title}`);
-  }
-};    
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
@@ -116,11 +138,11 @@ export default function ProfileScreen() {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-              <Image
-  source={require('@/assets/images/logo-shield.png')} 
-  style={{ width: 38, height: 38 }}
-  resizeMode="contain"
-/>
+            <Image
+              source={require('@/assets/images/logo-shield.png')}
+              style={{ width: 38, height: 38 }}
+              resizeMode="contain"
+            />
             <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Profile</Text>
           </View>
           <Pressable style={styles.bellButton}>
@@ -128,91 +150,92 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* PROFILE CARD */}
-          <View style={styles.profileHeaderContainer}>
-            <ProfileAvatar size={105} />
-            <Text style={styles.usernameText}>TheLittleRabbit90</Text>
-            <Text style={styles.modeText}>Mode Anonim</Text>
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#3BCFA6" />
           </View>
-
-          {/* QUICK STATS ROW */}
-          <View style={styles.quickStatsRow}>
-            <View style={styles.quickStatCard}>
-              <Flame size={20} color="#0FB184" style={styles.quickStatIcon} />
-              <Text style={styles.quickStatValue}>7 Hari</Text>
-              <Text style={styles.quickStatLabel}>LOGIN</Text>
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* PROFILE CARD */}
+            <View style={styles.profileHeaderContainer}>
+              <ProfileAvatar size={105} />
+              <Text style={styles.usernameText}>{displayName}</Text>
+              <Text style={styles.modeText}>{modeText}</Text>
             </View>
-            <View style={styles.quickStatCard}>
-              <Text style={styles.quickStatValue}>Baik</Text>
-              <Text style={styles.quickStatLabel}>TINGKAT EMOSIONAL</Text>
-            </View>
-          </View>
 
-          {/* KOMUNITAS CARD */}
-          <View style={styles.communityCard}>
-            <Text style={styles.communityTitle}>KOMUNITAS</Text>
-            
-            <View style={styles.communityStatsRow}>
-              {/* Stat Column 1 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#FCE4EC' }]}>
-                  <SquarePen size={20} color="#EC407A" />
-                </View>
-                <Text style={styles.communityStatValue}>4</Text>
-                <Text style={styles.communityStatLabel}>Postingan</Text>
+            {/* QUICK STATS ROW */}
+            <View style={styles.quickStatsRow}>
+              <View style={styles.quickStatCard}>
+                <Flame size={20} color="#0FB184" style={styles.quickStatIcon} />
+                <Text style={styles.quickStatValue}>{currentStreak} Hari</Text>
+                <Text style={styles.quickStatLabel}>STREAK</Text>
               </View>
-
-              {/* Stat Column 2 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#E0F2F1' }]}>
-                  <MessageSquare size={20} color="#00796B" />
-                </View>
-                <Text style={styles.communityStatValue}>21</Text>
-                <Text style={styles.communityStatLabel}>Komentar</Text>
-              </View>
-
-              {/* Stat Column 3 */}
-              <View style={styles.communityStatCol}>
-                <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-                  <Heart size={20} color="#388E3C" />
-                </View>
-                <Text style={styles.communityStatValue}>147</Text>
-                <Text style={styles.communityStatLabel}>Total Suka</Text>
+              <View style={styles.quickStatCard}>
+                <Text style={styles.quickStatValue}>
+                  {user?.is_verified ? 'Terverifikasi' : 'Anggota'}
+                </Text>
+                <Text style={styles.quickStatLabel}>STATUS</Text>
               </View>
             </View>
-          </View>
 
-          {/* SETTINGS LIST */}
-          <View style={styles.settingsList}>
-            {[
-              { title: 'Edit Profile', Icon: Smile },
-              { title: 'Pengaturan Akun', Icon: Lock },
-              { title: 'Pengaturan Aplikasi', Icon: Settings },
-              { title: 'Tentang Aplikasi', Icon: Info },
-              { title: 'Keluar', Icon: LogOut},
-            ].map((item, idx) => (
-              <Pressable
-                key={idx}
-                onPress={() => handlePressSetting(item.title)}
-                style={({ pressed }) => [
-                  styles.settingRow,
-                  pressed && { opacity: 0.8 }
-                ]}
-              >
-                <View style={styles.settingRowLeft}>
-                  <item.Icon size={20} color={item.title === 'Keluar' ? '#EF4444' : theme.mintDark} style={{ marginRight: 12 }} />
-                  <Text style={[styles.settingText, item.title === 'Keluar' && { color: '#EF4444' }]}>{item.title}</Text>
+            {/* KOMUNITAS CARD */}
+            <View style={styles.communityCard}>
+              <Text style={styles.communityTitle}>KOMUNITAS</Text>
+              <View style={styles.communityStatsRow}>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#FCE4EC' }]}>
+                    <SquarePen size={20} color="#EC407A" />
+                  </View>
+                  <Text style={styles.communityStatValue}>{postsCount}</Text>
+                  <Text style={styles.communityStatLabel}>Postingan</Text>
                 </View>
-                <ChevronRight size={18} color="#B0C2B8" />
-              </Pressable>
-            ))}
-          </View>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E0F2F1' }]}>
+                    <MessageSquare size={20} color="#00796B" />
+                  </View>
+                  <Text style={styles.communityStatValue}>{commentsCount}</Text>
+                  <Text style={styles.communityStatLabel}>Komentar</Text>
+                </View>
+                <View style={styles.communityStatCol}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
+                    <Heart size={20} color="#388E3C" />
+                  </View>
+                  <Text style={styles.communityStatValue}>{likesCount}</Text>
+                  <Text style={styles.communityStatLabel}>Total Suka</Text>
+                </View>
+              </View>
+            </View>
 
-        </ScrollView>
+            {/* SETTINGS LIST */}
+            <View style={styles.settingsList}>
+              {[
+                { title: 'Edit Profile', Icon: Smile },
+                { title: 'Pengaturan Akun', Icon: Lock },
+                { title: 'Pengaturan Aplikasi', Icon: Settings },
+                { title: 'Tentang Aplikasi', Icon: Info },
+                { title: 'Keluar', Icon: LogOut },
+              ].map((item, idx) => (
+                <Pressable
+                  key={idx}
+                  onPress={() => handlePressSetting(item.title)}
+                  style={({ pressed }) => [
+                    styles.settingRow,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                >
+                  <View style={styles.settingRowLeft}>
+                    <item.Icon size={20} color={theme.mintDark} style={{ marginRight: 12 }} />
+                    <Text style={styles.settingText}>{item.title}</Text>
+                  </View>
+                  <ChevronRight size={18} color="#B0C2B8" />
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        )}
       </SafeAreaView>
     </Animated.View>
   );

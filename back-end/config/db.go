@@ -23,7 +23,10 @@ func ConnectDB() {
 		log.Fatal("FATAL: SUPABASE_DB_URL environment variable is not set")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
@@ -58,6 +61,75 @@ func ConnectDB() {
 	)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to auto-migrate database schema: %v", err)
+	}
+
+	// Setup Supabase Auth synchronization function and trigger
+	createFuncSQL := `
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.users (id, email, display_name, username, role, is_anonymous, is_verified, created_at, updated_at)
+  VALUES (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    'user',
+    true,
+    false,
+    now(),
+    now()
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;`
+
+	if err := db.Exec(createFuncSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to create handle_new_user function: %v", err)
+	}
+
+	dropTriggerSQL := `DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;`
+	if err := db.Exec(dropTriggerSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to drop trigger: %v", err)
+	}
+
+	createTriggerSQL := `
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();`
+	if err := db.Exec(createTriggerSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to create on_auth_user_created trigger: %v", err)
+	}
+
+	// Setup Supabase Auth update trigger for email sync
+	createUpdateFuncSQL := `
+CREATE OR REPLACE FUNCTION public.handle_update_user()
+RETURNS trigger AS $$
+BEGIN
+  UPDATE public.users
+  SET email = new.email,
+      updated_at = now()
+  WHERE id = new.id;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;`
+
+	if err := db.Exec(createUpdateFuncSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to create handle_update_user function: %v", err)
+	}
+
+	dropUpdateTriggerSQL := `DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;`
+	if err := db.Exec(dropUpdateTriggerSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to drop update trigger: %v", err)
+	}
+
+	createUpdateTriggerSQL := `
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_update_user();`
+	if err := db.Exec(createUpdateTriggerSQL).Error; err != nil {
+		log.Printf("WARNING: Failed to create on_auth_user_updated trigger: %v", err)
 	}
 
 	DB = db

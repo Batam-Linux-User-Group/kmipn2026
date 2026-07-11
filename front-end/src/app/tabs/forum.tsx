@@ -1,26 +1,24 @@
 import { useRouter } from 'expo-router';
 import { Bell, Clock, Heart, MessageSquare, Plus, Search, Share2 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { Image } from "react-native";
-
 
 import { Avatar } from '@/components/avatar';
-import { Post, postsStore } from '@/constants/posts-data';
 import { Spacing } from '@/constants/theme';
 import { FontFamily } from '@/constants/fontsfamily';
 import { useTheme } from '@/hooks/use-theme';
+import { useForumStore } from '@/store/useForumStore';
 
-
-// Checkmark badge for username
 function CheckmarkIcon() {
   return (
     <Svg width={14} height={14} viewBox="0 0 14 14" fill="none" style={{ marginLeft: 4 }}>
@@ -30,38 +28,65 @@ function CheckmarkIcon() {
   );
 }
 
+function formatTime(dateStr: string): string {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes} menit lalu`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    const days = Math.floor(hours / 24);
+    return `${days} hari lalu`;
+  } catch {
+    return '';
+  }
+}
+
+const ALL_LABEL = 'Semua Kategori';
+
 export default function ForumScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>(() => postsStore.getPosts());
-  const [selectedCategory, setSelectedCategory] = useState<'Semua Kategori' | 'Minta Saran' | 'Berbagi Cerita'>('Semua Kategori');
 
-  // Load and subscribe to posts changes
+  const {
+    posts,
+    categories,
+    isLoadingPosts,
+    isLoadingCategories,
+    postsError,
+    fetchPosts,
+    fetchCategories,
+    togglePostLike,
+  } = useForumStore();
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  // Fetch on mount
   useEffect(() => {
-    // Subscribe to store updates
-    const unsubscribe = postsStore.subscribe(() => {
-      setPosts(postsStore.getPosts());
-    });
-    
-    return unsubscribe;
-  }, []);
+    fetchCategories();
+    fetchPosts();
+  }, [fetchCategories, fetchPosts]);
+
+  const handleCategorySelect = useCallback(
+    (categoryId: string | null) => {
+      setSelectedCategoryId(categoryId);
+      fetchPosts(categoryId ?? undefined);
+    },
+    [fetchPosts]
+  );
 
   const handleLike = (postId: string) => {
-    postsStore.likePost(postId);
+    togglePostLike(postId);
   };
 
   const handlePostDetail = (postId: string) => {
     router.push({
       pathname: '/tabs/forum-detail',
-      params: { id: postId }
+      params: { id: postId },
     });
   };
 
-  // Filter posts based on selected category
-  const filteredPosts = posts.filter((post) => {
-    if (selectedCategory === 'Semua Kategori') return true;
-    return post.category === selectedCategory;
-  });
+  const isLoading = isLoadingPosts || isLoadingCategories;
 
   return (
     <View style={styles.container}>
@@ -117,12 +142,33 @@ export default function ForumScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesRow}
           >
-            {(['Semua Kategori', 'Minta Saran', 'Berbagi Cerita'] as const).map((cat) => {
-              const isActive = selectedCategory === cat;
+            {/* "Semua" pill */}
+            <Pressable
+              onPress={() => handleCategorySelect(null)}
+              style={[
+                styles.categoryPill,
+                selectedCategoryId === null
+                  ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
+                  : { backgroundColor: '#ECEFEF', borderColor: '#ECEFEF' }
+              ]}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  { color: selectedCategoryId === null ? '#FFFFFF' : theme.mintDark }
+                ]}
+              >
+                {ALL_LABEL}
+              </Text>
+            </Pressable>
+
+            {/* Dynamic categories dari API */}
+            {categories.map((cat) => {
+              const isActive = selectedCategoryId === cat.id;
               return (
                 <Pressable
-                  key={cat}
-                  onPress={() => setSelectedCategory(cat)}
+                  key={cat.id}
+                  onPress={() => handleCategorySelect(cat.id)}
                   style={[
                     styles.categoryPill,
                     isActive
@@ -136,90 +182,102 @@ export default function ForumScreen() {
                       { color: isActive ? '#FFFFFF' : theme.mintDark }
                     ]}
                   >
-                    {cat}
+                    {cat.name}
                   </Text>
                 </Pressable>
               );
             })}
           </ScrollView>
 
+          {/* LOADING */}
+          {isLoading && (
+            <ActivityIndicator color="#3BCFA6" style={{ marginTop: 40 }} />
+          )}
+
+          {/* ERROR */}
+          {postsError && !isLoading && (
+            <Text style={[styles.noPostsText, { color: '#C0392B' }]}>
+              {postsError}
+            </Text>
+          )}
+
           {/* POSTS LIST */}
-          {filteredPosts.map((post) => (
-            <Pressable
-              key={post.id}
-              onPress={() => handlePostDetail(post.id)}
-              style={styles.postCard}
-            >
-              {/* User info row */}
-              <View style={styles.postHeader}>
-                <View style={styles.postHeaderLeft}>
-                  <Avatar type={post.avatarType} size={44} />
-                  <View style={styles.postUserText}>
-                    <View style={styles.usernameRow}>
-                      <Text style={styles.usernameText}>{post.username}</Text>
-                      {post.hasCheckmark && <CheckmarkIcon />}
+          {!isLoading && !postsError &&
+            posts.map((post) => (
+              <Pressable
+                key={post.id}
+                onPress={() => handlePostDetail(post.id)}
+                style={styles.postCard}
+              >
+                {/* User info row */}
+                <View style={styles.postHeader}>
+                  <View style={styles.postHeaderLeft}>
+                    <Avatar type="user" size={44} />
+                    <View style={styles.postUserText}>
+                      <View style={styles.usernameRow}>
+                        <Text style={styles.usernameText}>
+                          {post.user?.display_name ?? post.user?.username ?? 'Anonim'}
+                        </Text>
+                        {post.user?.is_verified && <CheckmarkIcon />}
+                      </View>
+                      <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>
+                        {post.user?.role ?? 'Anggota'}
+                      </Text>
                     </View>
-                    <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>{post.role}</Text>
+                  </View>
+
+                  {/* Category tag */}
+                  <View style={[styles.tagPill, { borderColor: theme.mintBorder }]}>
+                    <Text style={[styles.tagText, { color: theme.mintDark }]}>
+                      {post.category?.name?.toUpperCase() ?? ''}
+                    </Text>
                   </View>
                 </View>
 
-                {/* Category tag */}
-                <View
-                  style={[
-                    styles.tagPill,
-                    { borderColor: theme.mintBorder }
-                  ]}
-                >
-                  <Text style={[styles.tagText, { color: theme.mintDark }]}>
-                    {post.category.toUpperCase()}
-                  </Text>
+                {/* Post Content */}
+                <Text style={styles.postContent} numberOfLines={4}>
+                  {post.content}
+                </Text>
+
+                {/* Divider */}
+                <View style={styles.divider} />
+
+                {/* Footer Engagement */}
+                <View style={styles.postFooter}>
+                  <View style={styles.footerLeft}>
+                    <Clock size={16} color="#7C8C85" style={{ marginRight: 4 }} />
+                    <Text style={styles.footerText}>{formatTime(post.created_at)}</Text>
+                  </View>
+
+                  <View style={styles.footerRight}>
+                    {/* Comments button */}
+                    <Pressable
+                      onPress={() => handlePostDetail(post.id)}
+                      style={styles.footerActionButton}
+                    >
+                      <MessageSquare size={16} color="#7C8C85" style={{ marginRight: 4 }} />
+                      <Text style={styles.footerText}>{post.comments_count}</Text>
+                    </Pressable>
+
+                    {/* Likes button */}
+                    <Pressable
+                      onPress={() => handleLike(post.id)}
+                      style={styles.footerActionButton}
+                    >
+                      <Heart size={16} color="#7C8C85" style={{ marginRight: 4 }} />
+                      <Text style={styles.footerText}>{post.likes_count}</Text>
+                    </Pressable>
+
+                    {/* Share button */}
+                    <Pressable style={styles.footerActionButton}>
+                      <Share2 size={16} color="#7C8C85" />
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
+              </Pressable>
+            ))}
 
-              {/* Post Content */}
-              <Text style={styles.postContent} numberOfLines={4}>
-                {post.content}
-              </Text>
-
-              {/* Divider */}
-              <View style={styles.divider} />
-
-              {/* Footer Engagement */}
-              <View style={styles.postFooter}>
-                <View style={styles.footerLeft}>
-                  <Clock size={16} color="#7C8C85" style={{ marginRight: 4 }} />
-                  <Text style={styles.footerText}>{post.timeText}</Text>
-                </View>
-
-                <View style={styles.footerRight}>
-                  {/* Comments button */}
-                  <Pressable
-                    onPress={() => handlePostDetail(post.id)}
-                    style={styles.footerActionButton}
-                  >
-                    <MessageSquare size={16} color="#7C8C85" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerText}>{post.commentsCount}</Text>
-                  </Pressable>
-
-                  {/* Likes button */}
-                  <Pressable
-                    onPress={() => handleLike(post.id)}
-                    style={styles.footerActionButton}
-                  >
-                    <Heart size={16} color="#7C8C85" style={{ marginRight: 4 }} />
-                    <Text style={styles.footerText}>{post.likes}</Text>
-                  </Pressable>
-
-                  {/* Share button */}
-                  <Pressable style={styles.footerActionButton}>
-                    <Share2 size={16} color="#7C8C85" />
-                  </Pressable>
-                </View>
-              </View>
-            </Pressable>
-          ))}
-          
-          {filteredPosts.length === 0 && (
+          {!isLoading && !postsError && posts.length === 0 && (
             <Text style={[styles.noPostsText, { color: theme.cardSubtitle }]}>
               Belum ada postingan di kategori ini.
             </Text>

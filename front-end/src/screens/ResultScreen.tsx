@@ -1,51 +1,60 @@
+
+
+
 // src/screens/ResultScreen.tsx
 // Final result screen showing risk status, recommendation, journal, and navigation.
 
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 
 import { useAssessmentStore } from '@/store/useAssessmentStore';
 import { FontFamily } from '@/constants/fontsfamily';
+import { assessmentsApi } from '@/services/api';
 
 function JedaLogo({ size = 56 }: { size?: number }) {
   return (
-     <View>
-             <Image
-               source={require('@/assets/icons/Jeda_Logo.png')}
-               style={[ { width: size, height: size }]}
-               resizeMode="contain"
-             />
-           </View>
+    <View>
+      <Image
+        source={require('@/assets/icons/Jeda_Logo.png')}
+        style={[{ width: size, height: size }]}
+        resizeMode="contain"
+      />
+    </View>
   );
 }
+
 export default function ResultScreen() {
   const router = useRouter();
   const {
     totalScore,
     answers,
+    journalText,
+    triggerCount,
+    mainInstrument,
     reset,
     getRiskStatus: getStoreRiskStatus,
   } = useAssessmentStore();
 
   const { status, recommendation } = useMemo(
     () => getStoreRiskStatus(),
-    [totalScore]
+    [getStoreRiskStatus]
   );
 
-  // Determine status color intensity
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const statusColor = useMemo(() => {
     switch (status) {
       case 'Rendah':
@@ -53,7 +62,7 @@ export default function ResultScreen() {
       case 'Rentan':
         return '#E6A817';
       case 'Adiksi Tinggi':
-        return '#1A886A';
+        return '#C0392B';
       default:
         return '#1A886A';
     }
@@ -63,12 +72,26 @@ export default function ResultScreen() {
     router.back();
   };
 
-  const handleFinish = () => {
-    // TODO: In the future, submit to API here:
-    // POST /api/assessments with { answers, total_score, risk_status, journal_text }
-    // For now, just reset and go home.
-    reset();
-    router.replace('/tabs');
+  const handleFinish = async () => {
+    setIsSubmitting(true);
+    try {
+      await assessmentsApi.create({
+        answers,
+        journal_text: journalText,
+        total_score: totalScore,
+        risk_status: status,
+        recommendation,
+        main_instrument: mainInstrument,
+        trigger_count: triggerCount,
+      });
+      reset();
+      router.replace('/tabs');
+    } catch (err) {
+      console.error('[Result] Submit assessment error:', err);
+      Alert.alert('Gagal Menyimpan', (err as Error).message || 'Gagal menyimpan hasil asesmen.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -121,18 +144,36 @@ export default function ResultScreen() {
               <Text style={styles.recommendationLabel}>Rekomendasi...</Text>
               <Text style={styles.recommendationText}>{recommendation}</Text>
             </View>
+
+            {/* Score info */}
+            <View style={styles.scoreRow}>
+              <Text style={styles.scoreLabel}>Skor: </Text>
+              <Text style={styles.scoreValue}>{totalScore}</Text>
+            </View>
           </ScrollView>
 
           {/* Bottom Navigation */}
           <SafeAreaView edges={['bottom']} style={styles.bottomNav}>
-            <Pressable style={styles.pillButton} onPress={handleBack}>
+            <Pressable
+              style={[styles.pillButton, isSubmitting && { opacity: 0.5 }]}
+              onPress={handleBack}
+              disabled={isSubmitting}
+            >
               <Text style={styles.pillButtonText}>Kembali</Text>
             </Pressable>
 
             <View style={styles.dotIndicator} />
 
-            <Pressable style={styles.pillButton} onPress={handleFinish}>
-              <Text style={styles.pillButtonText}>Selesai</Text>
+            <Pressable
+              style={[styles.pillButton, isSubmitting && { opacity: 0.5 }]}
+              onPress={handleFinish}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#3BCFA6" />
+              ) : (
+                <Text style={styles.pillButtonText}>Selesai</Text>
+              )}
             </Pressable>
           </SafeAreaView>
         </KeyboardAvoidingView>
@@ -216,11 +257,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
-    shadowColor: '#2BD5A2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 17,
-    elevation: 6,
   },
   recommendationLabel: {
     fontSize: 14,
@@ -234,6 +270,23 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.manropeMedium,
     color: '#FFFFFF',
     lineHeight: 22,
+  },
+
+  // Score
+  scoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  scoreLabel: {
+    fontSize: 13,
+    color: '#1A886A',
+    opacity: 0.7,
+  },
+  scoreValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1A886A',
   },
 
   // Bottom Navigation
@@ -251,10 +304,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 17,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
   pillButtonText: {
     color: '#3BCFA6',

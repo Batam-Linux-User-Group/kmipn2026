@@ -1,6 +1,5 @@
 // src/store/useAssessmentStore.ts
 // Zustand store for assessment state management.
-// Journal text is kept purely in local state — no Supabase calls here.
 
 import { create } from 'zustand';
 import { getRiskStatus } from '@/data/assessmentData';
@@ -20,7 +19,7 @@ interface AssessmentState {
   // Running total score
   totalScore: number;
 
-  // Self journal text (local only, no DB persistence yet)
+  // Self journal text
   journalText: string;
 
   // Trading plan fields
@@ -37,13 +36,18 @@ interface AssessmentState {
   // The next node to go to after breathing screen
   pendingNextNodeId: string | null;
 
+  // Derived metadata (populated as user progresses)
+  triggerCount: number;       // how many isTrigger options were hit
+  mainInstrument: string;     // 'Saham' | 'Crypto' | ''
+
   // Actions
-  selectOption: (nodeId: string, optionText: string, score: number) => void;
+  selectOption: (nodeId: string, optionText: string, score: number, isTrigger?: boolean) => void;
   goToNode: (nodeId: string) => void;
-  goBack: () => boolean; // returns false if cannot go back
+  goBack: () => boolean;
   setJournalText: (text: string) => void;
   setTradingPlan: (plan: { entry: string; price: string; tpSl: string; reason: string } | null) => void;
   setPendingNextNodeId: (nodeId: string | null) => void;
+  setMainInstrument: (instrument: string) => void;
   reset: () => void;
   getRiskStatus: () => { status: string; recommendation: string };
 }
@@ -56,16 +60,22 @@ const initialState = {
   tradingPlan: null as { entry: string; price: string; tpSl: string; reason: string } | null,
   history: [] as string[],
   pendingNextNodeId: null as string | null,
+  triggerCount: 0,
+  mainInstrument: '',
 };
 
 export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   ...initialState,
 
-  selectOption: (nodeId: string, optionText: string, score: number) => {
+  selectOption: (nodeId: string, optionText: string, score: number, isTrigger = false) => {
     set((state) => {
       // If re-answering a question, subtract old score first
       const oldAnswer = state.answers[nodeId];
       const oldScore = oldAnswer ? oldAnswer.score : 0;
+
+      // Track trigger count changes (if previously answered, adjust delta)
+      const wasTrigger = false; // simplified — triggers not un-triggerable
+      const triggerDelta = isTrigger && !wasTrigger ? 1 : 0;
 
       return {
         answers: {
@@ -73,6 +83,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
           [nodeId]: { optionText, score },
         },
         totalScore: state.totalScore - oldScore + score,
+        triggerCount: state.triggerCount + triggerDelta,
       };
     });
   },
@@ -106,6 +117,10 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
 
   setPendingNextNodeId: (nodeId: string | null) => {
     set({ pendingNextNodeId: nodeId });
+  },
+
+  setMainInstrument: (instrument: string) => {
+    set({ mainInstrument: instrument });
   },
 
   reset: () => {

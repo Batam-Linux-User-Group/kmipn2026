@@ -8,7 +8,7 @@ import {
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Moon, BellRing, Volume2, Globe, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Moon, BellRing, Volume2, Globe, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
@@ -132,16 +132,13 @@ export default function AppSettingsScreen() {
             })}
           </View>
 
-          {/* DATA Section */}
-          <Text style={styles.sectionTitle}>DATA</Text>
-
-          <Pressable style={styles.clearCacheButton}>
-            <Trash2 size={18} color="#7C8C85" />
-            <Text style={styles.clearCacheText}>Hapus Cache Aplikasi</Text>
-          </Pressable>
-
-          <Text style={styles.cacheHint}>Menghapus cache tidak akan menghapus data akun Anda.</Text>
-
+          {/* Logout Button */}
+          <View style={styles.logoutContainer}>
+            <Pressable style={styles.logoutButton} onPress={() => router.replace('/auth/login')}>
+              <LogOut size={20} color="#EF4444" />
+              <Text style={styles.logoutButtonText}>Keluar dari Aplikasi</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -195,6 +192,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 17,
     elevation: 4,
+    marginBottom: 16,
   },
   settingRow: {
     flexDirection: 'row',
@@ -250,7 +248,11 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
-  clearCacheButton: {
+  logoutContainer: {
+    marginTop: 32,
+    marginBottom: 16,
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -258,22 +260,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 17,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  clearCacheText: {
+  logoutButtonText: {
     fontSize: 15,
     fontFamily: FontFamily.manropeMedium,
-    color: '#7C8C85',
-  },
-  cacheHint: {
-    fontSize: 11,
-    fontFamily: FontFamily.manropeRegular,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 12,
+    color: '#EF4444',
   },
 });

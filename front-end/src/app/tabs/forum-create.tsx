@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import { router } from 'expo-router';
+import { ArrowLeft, Image as ImageIcon, Smile } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  TextInput,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, Image as ImageIcon, Smile } from 'lucide-react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
-import { FontFamily } from '@/constants/fontsfamily';
 import { Avatar } from '@/components/avatar';
-import { postsStore } from '@/constants/posts-data';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useForumStore } from '@/store/useForumStore';
+import { FontFamily } from '@/constants/fontsfamily';
 
 function CheckmarkIcon() {
   return (
@@ -31,13 +32,28 @@ function CheckmarkIcon() {
 
 export default function ForumCreateScreen() {
   const theme = useTheme();
-  const router = useRouter();
-  const [postText, setPostText] = useState('');
-  const [category, setCategory] = useState<'Minta Saran' | 'Berbagi Cerita' | 'Atur Strategi'>('Atur Strategi');
+  const { categories, fetchCategories, createPost, isCreatingPost } = useForumStore();
 
-  const handlePost = () => {
-    if (postText.trim()) {
-      postsStore.addPost(category, postText.trim());
+  const [postText, setPostText] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+  }, []);
+
+  // Set default category saat categories loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories]);
+
+  const handlePost = async () => {
+    if (!postText.trim() || !selectedCategoryId) return;
+    const success = await createPost(selectedCategoryId, postText.trim());
+    if (success) {
       router.back();
     }
   };
@@ -50,8 +66,8 @@ export default function ForumCreateScreen() {
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <ArrowLeft size={24} color={theme.mintDark} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Baca Postingan</Text>
-          <View style={{ width: 40 }} /> {/* balance back button width */}
+          <Text style={[styles.headerTitle, { color: theme.mintDark }]}>Buat Postingan</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         <KeyboardAvoidingView
@@ -64,13 +80,13 @@ export default function ForumCreateScreen() {
           >
             {/* USER INFO HEADER */}
             <View style={styles.userInfoRow}>
-              <Avatar type="bunny" size={48} />
+              <Avatar type="user" size={48} />
               <View style={styles.userTextContainer}>
                 <View style={styles.usernameRow}>
-                  <Text style={styles.username}>SweetBunny22</Text>
+                  <Text style={styles.username}>Kamu</Text>
                   <CheckmarkIcon />
                 </View>
-                <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>Keluarga Pecandu</Text>
+                <Text style={[styles.userRole, { color: theme.cardSubtitle }]}>Anggota JEDA</Text>
               </View>
             </View>
 
@@ -85,8 +101,6 @@ export default function ForumCreateScreen() {
                 multiline
                 textAlignVertical="top"
               />
-              
-              {/* Media attachments triggers */}
               <View style={styles.inputCardActions}>
                 <Pressable style={styles.actionIconButton}>
                   <ImageIcon size={22} color="#7C8C85" />
@@ -99,47 +113,50 @@ export default function ForumCreateScreen() {
 
             {/* CATEGORY SELECTOR */}
             <Text style={[styles.sectionTitle, { color: theme.mintDark }]}>Pilih Kategori</Text>
-            
+
             <View style={styles.categoriesContainer}>
-              {(['Minta Saran', 'Berbagi Cerita', 'Atur Strategi'] as const).map((cat) => {
-                const isActive = category === cat;
-                return (
-                  <Pressable
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    style={[
-                      styles.categoryPill,
-                      isActive
-                        ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
-                        : { backgroundColor: '#F2ECE9', borderColor: '#F2ECE9' }
-                    ]}
-                  >
-                    <Text
+              {categories.length === 0 ? (
+                <ActivityIndicator color="#3BCFA6" />
+              ) : (
+                categories.map((cat) => {
+                  const isActive = selectedCategoryId === cat.id;
+                  return (
+                    <Pressable
+                      key={cat.id}
+                      onPress={() => setSelectedCategoryId(cat.id)}
                       style={[
-                        styles.categoryText,
-                        { color: isActive ? '#FFFFFF' : theme.mintDark }
+                        styles.categoryPill,
+                        isActive
+                          ? { backgroundColor: theme.mintDark, borderColor: theme.mintDark }
+                          : { backgroundColor: '#F2ECE9', borderColor: '#F2ECE9' },
                       ]}
                     >
-                      {cat}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text style={[styles.categoryText, { color: isActive ? '#FFFFFF' : theme.mintDark }]}>
+                        {cat.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })
+              )}
             </View>
           </ScrollView>
 
-          {/* POST NOW BUTTON (FIXED AT BOTTOM) */}
+          {/* POST NOW BUTTON */}
           <View style={styles.footerContainer}>
             <Pressable
               onPress={handlePost}
-              disabled={!postText.trim()}
+              disabled={!postText.trim() || !selectedCategoryId || isCreatingPost}
               style={({ pressed }) => [
                 styles.submitButton,
                 { backgroundColor: theme.mintMedium },
-                (!postText.trim() || pressed) && { opacity: 0.85 }
+                (!postText.trim() || !selectedCategoryId || pressed || isCreatingPost) && { opacity: 0.75 },
               ]}
             >
-              <Text style={styles.submitButtonText}>Posting Sekarang</Text>
+              {isCreatingPost ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Posting Sekarang</Text>
+              )}
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -149,13 +166,8 @@ export default function ForumCreateScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -163,44 +175,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
   },
-  backButton: {
-    padding: Spacing.one,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: FontFamily.manropeBold,
-    textAlign: 'center',
-  },
-  keyboardView: {
-    flex: 1,
-  },
+  backButton: { padding: Spacing.one },
+  headerTitle: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  keyboardView: { flex: 1 },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
-    paddingBottom: 120, // leave space for posting button
+    paddingBottom: 120,
   },
-  userInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.four,
-  },
-  userTextContainer: {
-    marginLeft: 12,
-  },
-  usernameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  username: {
-    fontSize: 16,
-    fontFamily: FontFamily.manropeBold,
-    color: '#1A2520',
-  },
-  userRole: {
-    fontSize: 12,
-    fontFamily: FontFamily.manropeMedium,
-    marginTop: 2,
-  },
+  userInfoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.four },
+  userTextContainer: { marginLeft: 12 },
+  usernameRow: { flexDirection: 'row', alignItems: 'center' },
+  username: { fontSize: 16, fontWeight: '700', color: '#1A2520' },
+  userRole: { fontSize: 12, fontWeight: '500', marginTop: 2 },
   inputCard: {
     backgroundColor: '#FAFDFD',
     borderRadius: 24,
@@ -210,17 +197,12 @@ const styles = StyleSheet.create({
     height: 250,
     justifyContent: 'space-between',
     marginBottom: Spacing.five,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 17,
-    elevation: 5,
   },
   textArea: {
     flex: 1,
     fontSize: 16,
     color: '#283830',
-    fontFamily: FontFamily.manropeMedium,
+    fontWeight: '500',
     lineHeight: 24,
   },
   inputCardActions: {
@@ -228,20 +210,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  actionIconButton: {
-    padding: Spacing.one,
-    marginLeft: 12,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontFamily: FontFamily.manropeBold,
-    marginBottom: Spacing.three,
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: Spacing.four,
-  },
+  actionIconButton: { padding: Spacing.one, marginLeft: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: Spacing.three },
+  categoriesContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: Spacing.four },
   categoryPill: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -249,16 +220,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginRight: 8,
     marginBottom: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 17,
-    elevation: 2,
   },
-  categoryText: {
-    fontSize: 14,
-    fontFamily: FontFamily.manropeBold,
-  },
+  categoryText: { fontSize: 14, fontWeight: '700' },
   footerContainer: {
     position: 'absolute',
     bottom: 24,
@@ -272,13 +235,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#2BD5A2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 17,
-    elevation: 6,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 30
   },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: FontFamily.manropeBold,
-  },
+  submitButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
 });
