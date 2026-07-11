@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +6,8 @@ import {
   Pressable,
   ScrollView,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera } from 'lucide-react-native';
@@ -14,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { FontFamily } from '@/constants/fontsfamily';
+import { usersApi } from '@/services/api';
 
 // Reuse the profile avatar from profile/index
 function ProfileAvatar({ size = 100 }: { size?: number }) {
@@ -47,14 +50,54 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const theme = useTheme();
 
-  const [username, setUsername] = useState('TheLittleRabbit90');
-  const [bio, setBio] = useState('Investor pemula yang sedang belajar mengelola emosi.');
-  const [email] = useState('fawwaz.k***@gmail.com');
+  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    // TODO: Save to backend
-    router.back();
+  useEffect(() => {
+    let mounted = true;
+    usersApi.getMe()
+      .then((res) => {
+        if (!mounted) return;
+        setDisplayName(res.user.display_name || '');
+        setUsername(res.user.username || '');
+        setEmail(res.user.email || '');
+      })
+      .catch((err) => console.error('[EditProfile] load error:', err))
+      .finally(() => { if (mounted) setIsLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  const handleSave = async () => {
+    if (!displayName.trim()) {
+      Alert.alert('Error', 'Nama tampilan tidak boleh kosong');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await usersApi.updateMe({
+        display_name: displayName,
+        username: username,
+      });
+      router.back();
+    } catch (err) {
+      console.error('[EditProfile] save error:', err);
+      Alert.alert('Gagal Menyimpan', (err as Error).message || 'Gagal menyimpan perubahan profil.');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#3BCFA6" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -87,6 +130,18 @@ export default function EditProfileScreen() {
 
           {/* Form Fields */}
           <View style={styles.formSection}>
+            <Text style={styles.fieldLabel}>Nama Tampilan</Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="Masukkan nama tampilan"
+                placeholderTextColor="#A0A5A8"
+                editable={!isSaving}
+              />
+            </View>
+
             <Text style={styles.fieldLabel}>Username</Text>
             <View style={styles.inputWrapper}>
               <TextInput
@@ -95,18 +150,8 @@ export default function EditProfileScreen() {
                 onChangeText={setUsername}
                 placeholder="Masukkan username"
                 placeholderTextColor="#A0A5A8"
-              />
-            </View>
-
-            <Text style={styles.fieldLabel}>Bio / Status</Text>
-            <View style={[styles.inputWrapper, { height: 100 }]}>
-              <TextInput
-                style={[styles.textInput, { height: 90, textAlignVertical: 'top' }]}
-                value={bio}
-                onChangeText={setBio}
-                placeholder="Tulis bio singkat..."
-                placeholderTextColor="#A0A5A8"
-                multiline
+                autoCapitalize="none"
+                editable={!isSaving}
               />
             </View>
 
@@ -124,13 +169,19 @@ export default function EditProfileScreen() {
           {/* Save Button */}
           <Pressable
             onPress={handleSave}
+            disabled={isSaving}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: theme.mintMedium },
               pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+              isSaving && { opacity: 0.6 },
             ]}
           >
-            <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
+            )}
           </Pressable>
         </ScrollView>
       </SafeAreaView>

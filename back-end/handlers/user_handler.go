@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"jeda-api/config"
 	"jeda-api/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -65,6 +68,20 @@ func SyncUser(c *gin.Context) {
 		Role:        req.Role,
 	}
 
+	// Prevent empty username overwrite
+	if user.Username == "" {
+		var existingUser models.User
+		if err := config.DB.Select("username").Where("id = ?", userID).First(&existingUser).Error; err == nil && existingUser.Username != "" {
+			user.Username = existingUser.Username
+		} else {
+			// Fallback to email prefix
+			parts := strings.Split(req.Email, "@")
+			if len(parts) > 0 {
+				user.Username = parts[0]
+			}
+		}
+	}
+
 	// Set boolean fields if provided
 	if req.IsAnonymous != nil {
 		user.IsAnonymous = *req.IsAnonymous
@@ -102,5 +119,167 @@ func SyncUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User synced successfully",
 		"user":    user,
+	})
+}
+
+// --------------------------------------------------------------------------
+// GET /api/users/me
+// --------------------------------------------------------------------------
+
+// GetMe handles GET /api/users/me.
+// Returns the authenticated user's profile + streak.
+func GetMe(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "not_found",
+				"message": "User not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "server_error",
+			"message": "Failed to fetch user: " + err.Error(),
+		})
+		return
+	}
+
+	// Also fetch streak if exists
+	var streak models.UserStreak
+	config.DB.Where("user_id = ?", userID).First(&streak)
+
+	// Fetch community counts
+	var postsCount int64
+	config.DB.Model(&models.ForumPost{}).Where("user_id = ?", userID).Count(&postsCount)
+
+	var commentsCount int64
+	config.DB.Model(&models.ForumComment{}).Where("user_id = ?", userID).Count(&commentsCount)
+
+	var totalLikes int64
+	config.DB.Model(&models.ForumPost{}).Where("user_id = ?", userID).Select("COALESCE(SUM(likes_count), 0)").Row().Scan(&totalLikes)
+
+	c.JSON(http.StatusOK, gin.H{
+		"user":           user,
+		"streak":         streak,
+		"posts_count":    postsCount,
+		"comments_count": commentsCount,
+		"likes_count":    totalLikes,
+	})
+}
+
+// --------------------------------------------------------------------------
+// PATCH /api/users/me
+// --------------------------------------------------------------------------
+
+// UpdateMeRequest is the request body for PATCH /api/users/me.
+type UpdateMeRequest struct {
+	DisplayName *string `json:"display_name"`
+	Username    *string `json:"username"`
+	AvatarURL   *string `json:"avatar_url"`
+	IsAnonymous *bool   `json:"is_anonymous"`
+}
+
+// UpdateMe handles PATCH /api/users/me.
+// Updates only the fields provided in the request body.
+func UpdateMe(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	var req UpdateMeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "bad_request",
+			"message": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	// Build update map — only include fields that were provided
+	updates := map[string]interface{}{}
+	if req.DisplayName != nil {
+		updates["display_name"] = *req.DisplayName
+	}
+	if req.Username != nil {
+		updates["username"] = *req.Username
+	}
+	if req.AvatarURL != nil {
+		updates["avatar_url"] = *req.AvatarURL
+	}
+	if req.IsAnonymous != nil {
+		updates["is_anonymous"] = *req.IsAnonymous
+	}
+
+	if len(updates) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "bad_request",
+			"message": "No fields to update",
+		})
+		return
+	}
+
+	result := config.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "server_error",
+			"message": "Failed to update user: " + result.Error.Error(),
+		})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_found",
+			"message": "User not found",
+		})
+		return
+	}
+
+	// Return updated user
+	var user models.User
+	config.DB.Where("id = ?", userID).First(&user)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
+		"user":    user,
+	})
+}
+
+// DeleteMe handles DELETE /api/users/me.
+// Deletes the authenticated user's record from database.
+func DeleteMe(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "Invalid or missing user ID",
+		})
+		return
+	}
+
+	result := config.DB.Where("id = ?", userID).Delete(&models.User{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "server_error",
+			"message": "Failed to delete user profile: " + result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User profile deleted successfully",
 	})
 }

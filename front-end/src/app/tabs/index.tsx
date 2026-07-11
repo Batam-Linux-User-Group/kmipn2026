@@ -1,21 +1,23 @@
+import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Bell, Flame } from "lucide-react-native";
-import { Alert } from "react-native";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View
+  View,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Path, Rect, Line } from "react-native-svg";
-import { Image } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { Spacing } from "@/constants/theme";
 import { FontFamily } from "@/constants/fontsfamily";
 import { useTheme } from "@/hooks/use-theme";
+import { usersApi, quotesApi, assessmentsApi, User, UserStreak, DailyQuote, TodayStatus } from "@/services/api";
 
 // ─── SVG Icons for Menu Cards ───────────────────────────────
 
@@ -122,6 +124,62 @@ export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
 
+  const [user, setUser] = useState<User | null>(null);
+  const [streak, setStreak] = useState<UserStreak | null>(null);
+  const [quote, setQuote] = useState<DailyQuote | null>(null);
+  const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        const [meRes, quoteRes, todayRes] = await Promise.all([
+          usersApi.getMe(),
+          quotesApi.getRandom(),
+          assessmentsApi.getToday(),
+        ]);
+        if (!mounted) return;
+        setUser(meRes.user);
+        setStreak(meRes.streak);
+        setQuote(quoteRes);
+        setTodayStatus(todayRes);
+      } catch (err) {
+        console.error('[Home] loadData error:', err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#C5E3DE' }]}>
+        <ActivityIndicator size="large" color="#3BCFA6" />
+      </View>
+    );
+  }
+
+  const displayName = user?.display_name || user?.username || 'Trader JEDA';
+  const currentStreak = streak?.current_streak ?? 0;
+  const quoteText = quote?.quote_text || 'Investasi yang sehat dimulai dengan perencanaan yang matang, bukan dorongan impulsif.';
+  const quoteAuthor = quote?.author || 'Prinsip JEDA';
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -143,10 +201,10 @@ export default function HomeScreen() {
               <Text
                 style={[styles.greetingText, { color: theme.mintDark + "99" }]}
               >
-                Selamat Pagi
+                {getGreeting()}
               </Text>
               <Text style={[styles.nameText, { color: theme.mintDark }]}>
-                Fawwaz Khairiy Wahid
+                {displayName}
               </Text>
             </View>
           </View>
@@ -162,7 +220,7 @@ export default function HomeScreen() {
               color={theme.streakOrange}
               fill={theme.streakOrange}
             />
-            <Text style={[styles.streakText, { color: theme.text }]}>7</Text>
+            <Text style={[styles.streakText, { color: theme.text }]}>{currentStreak}</Text>
           </View>
         </View>
 
@@ -178,7 +236,10 @@ export default function HomeScreen() {
               <View style={styles.quotesBlur}>
                 <Text style={styles.quotesTitle}>Quotes of the day</Text>
                 <Text style={styles.quotesText}>
-                  Discipline is the bridge between goals and accomplishment.
+                  {quoteText}
+                </Text>
+                <Text style={styles.quotesAuthor}>
+                  — {quoteAuthor}
                 </Text>
               </View>
             </View>
@@ -187,7 +248,7 @@ export default function HomeScreen() {
             <View style={styles.menuGrid}>
               <View style={styles.menuRow}>
                 <Pressable
-                  onPress={() => router.push('/trading-plan')}
+                  onPress={() => router.push('/assessment')}
                   style={({ pressed }) => [
                     styles.menuCard,
                     pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
@@ -235,16 +296,30 @@ export default function HomeScreen() {
             </View>
 
             {/* EMOTION BANNER CAPSULE */}
-            <View style={styles.emotionBanner}>
-              <View style={styles.emotionInnerContainer}>
-                <Text style={styles.emotionBannerText}>
-                  Emosi anda hari ini kurang baik hari ini, mohon ambil <Text style={styles.emotionBannerBold}>JEDA!</Text>
-                </Text>
+            {todayStatus && (
+              <View style={styles.emotionBanner}>
+                <View style={styles.emotionInnerContainer}>
+                  <Text style={styles.emotionBannerText}>
+                    {!todayStatus.isCompletedToday ? (
+                      <>
+                        Anda belum mengisi Daily Question hari ini. Yuk <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    ) : todayStatus.risk_status === 'Rendah' ? (
+                      <>
+                        Emosi Anda hari ini terpantau stabil. Tetap pertahankan <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    ) : (
+                      <>
+                        Emosi Anda hari ini kurang stabil ({todayStatus.risk_status}). Mohon ambil <Text style={styles.emotionBannerBold}>JEDA!</Text>
+                      </>
+                    )}
+                  </Text>
+                </View>
+                <View style={styles.emotionBellWrapper}>
+                  <Bell size={24} color="#000000" fill="#000000" />
+                </View>
               </View>
-              <View style={styles.emotionBellWrapper}>
-                <Bell size={24} color="#000000" fill="#000000" />
-              </View>
-            </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -346,6 +421,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 26,
     paddingHorizontal: 6,
+  },
+  quotesAuthor: {
+    fontSize: 12,
+    fontFamily: FontFamily.manropeMedium,
+    color: '#718096',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 
   // Menu Grid
