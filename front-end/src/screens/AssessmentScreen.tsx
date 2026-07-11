@@ -92,6 +92,8 @@ export default function AssessmentScreen() {
     return node.options.find((o) => o.text === selectedOptionText) ?? null;
   }, [node, selectedOptionText]);
 
+  const isFirstNode = history.length === 0;
+
   const handleSelectOption = useCallback(
     (optionText: string, score: number) => {
       if (!node) return;
@@ -100,6 +102,7 @@ export default function AssessmentScreen() {
     },
     [node, selectOption]
   );
+  
 
   const handleNext = useCallback(() => {
     if (!selectedOption || !node) return;
@@ -120,12 +123,9 @@ export default function AssessmentScreen() {
     goToNode(selectedOption.next);
   }, [selectedOption, node, selectOption, goToNode, setPendingNextNodeId, router]);
 
-  const handleBack = useCallback(() => {
-    const couldGoBack = goBack();
-    if (!couldGoBack) {
-      router.back();
-    }
-  }, [goBack, router]);
+   const handleBack = useCallback(() => {
+    goBack(); 
+  }, [goBack]);
 
   if (!node) {
     return (
@@ -136,7 +136,7 @@ export default function AssessmentScreen() {
   }
 
   return (
-    <View style={styles.container}>
+      <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView
           style={styles.flex}
@@ -199,11 +199,28 @@ export default function AssessmentScreen() {
           </ScrollView>
 
           <SafeAreaView edges={['bottom']} style={styles.bottomNav}>
-            <Pressable style={styles.pillButton} onPress={handleBack}>
-              <Text style={styles.pillButtonText}>Kembali</Text>
+           <Pressable 
+              style={[styles.pillButton, isFirstNode && styles.pillButtonDisabled]} 
+              onPress={handleBack}
+              disabled={isFirstNode}
+            >
+              <Text style={[styles.pillButtonText, isFirstNode && styles.pillButtonTextDisabled]}>
+                Kembali
+              </Text>
             </Pressable>
 
-            <View style={styles.dotIndicator} />
+    <View style={styles.dotsContainer}>
+              {Array.from({ length: history.length + 1 }).map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.dotIndicator,
+                    index === history.length && styles.dotIndicatorActive, // Highlight dot aktif
+                  ]}
+                />
+              ))}
+            </View>
+
 
             <Pressable
               style={[
@@ -230,6 +247,25 @@ export default function AssessmentScreen() {
 }
 
 const styles = StyleSheet.create({
+    dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6, // Jarak antar dots
+  },
+   dotIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1A886A',
+    opacity: 0.4, 
+  },
+   dotIndicatorActive: {
+    backgroundColor: '#3BCFA6', 
+    opacity: 1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
   container: {
     flex: 1,
     backgroundColor: '#C5E3DE',
@@ -359,11 +395,5 @@ const styles = StyleSheet.create({
   pillButtonTextDisabled: {
     color: '#3BCFA6',
   },
-  dotIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1A886A',
-    opacity: 0.3,
-  },
+
 });
